@@ -29,7 +29,7 @@ async function semak() {
   const rows = text.split("\n").map(r => r.split(","));
 
   for (let i = 1; i < rows.length; i++) {
-    if (rows[i][0] === hash) {
+    if (rows[i][0].trim() === hash.trim()) {
       let html = "<h3>Status Yuran</h3><table>";
       for (let j = 1; j < rows[0].length; j++) {
         html += `<tr><td>${rows[0][j]}</td><td>${rows[i][j]}</td></tr>`;
