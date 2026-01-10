@@ -26,23 +26,28 @@ async function semak() {
 
   const res = await fetch(SHEET_URL);
   const text = await res.text();
-  const rows = text.split("\n").map(r => r.split(","));
-for (let i = 1; i < rows.length; i++) {
-  const sheetHash = rows[i][0]?.trim();
-  if (sheetHash === hash) {
-    let html = "<h3>Status Yuran</h3><table>";
-    for (let j = 1; j < rows[0].length; j++) {
-      html += `<tr>
-        <td>${rows[0][j]}</td>
-        <td>${rows[i][j] || "-"}</td>
-      </tr>`;
-    }
-    html += "</table>";
-    result.innerHTML = html;
-    return;
-  }
-}
 
- 
+  const rows = text
+    .trim()
+    .split("\n")
+    .map(r => r.replace(/\r/g, "").split(",").map(c => c.replace(/"/g, "").trim()));
+
+  for (let i = 1; i < rows.length; i++) {
+    const sheetHash = rows[i][0];
+
+    if (sheetHash === hash) {
+      let html = "<h3>Status Yuran</h3><table>";
+      for (let j = 1; j < rows[0].length; j++) {
+        html += `<tr>
+          <td>${rows[0][j]}</td>
+          <td>${rows[i][j] || "-"}</td>
+        </tr>`;
+      }
+      html += "</table>";
+      result.innerHTML = html;
+      return;
+    }
+  }
+
   msg.innerText = "Rekod tidak ditemui.";
 }
