@@ -14,14 +14,17 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .header-logo img { width: 50px; height: 50px; object-fit: contain; }
 .header-logo h1 { font-size: 22px; font-weight: 700; letter-spacing: 0.02em; }
 .header-sub { font-size: 12px; opacity: 0.75; }
-.tab-nav { display: flex; background: #145f38; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
-.tab-btn { flex: 1; padding: 13px 8px; text-align: center; font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.65); cursor: pointer; border: none; background: none; border-bottom: 3px solid transparent; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s; }
-.tab-btn.active { color: #ffffff; border-bottom-color: #ffffff; background: rgba(255,255,255,0.12); }
-.tab-btn:active { background: rgba(255,255,255,0.08); }
-.tab-icon { font-size: 15px; }
+.tab-nav { display: flex; background: white; position: fixed; bottom: 0; left: 0; right: 0; z-index: 100; border-top: 1px solid #e5e7eb; box-shadow: 0 -2px 10px rgba(0,0,0,0.08); padding: 6px 20px 10px; }
+.tab-btn { flex: 1; padding: 6px 8px 4px; text-align: center; font-size: 11px; font-weight: 600; color: #9ca3af; cursor: pointer; border: none; background: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; transition: all 0.15s; border-radius: 10px; }
+.tab-btn.active { color: #1a7a4a; }
+.tab-btn:active { background: #f3f4f6; }
+.tab-icon { font-size: 22px; line-height: 1; }
+.tab-dot { width: 5px; height: 5px; border-radius: 50%; background: #1a7a4a; margin: 0 auto; opacity: 0; transition: opacity 0.2s; }
+.tab-btn.active .tab-dot { opacity: 1; }
 .page { display: none; }
 .page.active { display: block; }
-.app-frame { width: 100%; border: none; display: block; min-height: calc(100vh - 130px); }
+.app-frame { width: 100%; border: none; display: block; min-height: calc(100vh - 70px); }
+body { padding-bottom: 65px; }
 </style>
 </head>
 <body>
@@ -36,10 +39,14 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 
 <div class="tab-nav">
   <button class="tab-btn active" onclick="switchTab('kewangan')" id="tab-kewangan">
-    <span class="tab-icon">💰</span> Penyata Kewangan
+    <span class="tab-icon">💰</span>
+    <span>Kewangan</span>
+    <div class="tab-dot"></div>
   </button>
   <button class="tab-btn" onclick="switchTab('yuran')" id="tab-yuran">
-    <span class="tab-icon">📋</span> Yuran 2026
+    <span class="tab-icon">📋</span>
+    <span>Yuran 2026</span>
+    <div class="tab-dot"></div>
   </button>
 </div>
 
