@@ -232,7 +232,7 @@
 <div id="preview-modal">
   <div class="modal-card">
     <div class="modal-header">
-      <h2 id="modal-title">Preview Penyata</h2>
+      <h2 id="modal-title">Pratonton Penyata</h2>
       <button class="modal-close" onclick="closePreview()">✕</button>
     </div>
     <div class="modal-body" id="modal-body"></div>
@@ -343,7 +343,7 @@
 
 <!-- Bottom Action Bar -->
 <div class="bottom-bar">
-  <button class="btn btn-outline" onclick="showPreview()">👁 Preview</button>
+  <button class="btn btn-outline" onclick="showPreview()">👁 Pratonton</button>
   <button class="btn btn-primary" onclick="saveToSheet()">☁ Simpan ke Sheets</button>
 </div>
 
@@ -432,7 +432,7 @@ function updateUrlStatus(url) {
   const sub = document.getElementById('header-sub');
   if (url) {
     el.innerHTML = '<div class="connected-pill"><div class="dot"></div>Disambung ke Google Sheets</div>';
-    sub.textContent = 'Connected.';
+    sub.textContent = 'Disambung • Data akan disimpan ke Google Sheets';
     sub.style.color = 'rgba(255,255,255,0.9)';
   } else {
     el.innerHTML = '';
@@ -701,6 +701,10 @@ function renderAnnualSummary(data, tahun) {
   const months = data.months;
   const totalMasuk = months.reduce((s,m) => s + m.totalMasuk, 0);
   const totalKeluar = months.reduce((s,m) => s + m.totalKeluar, 0);
+  // Pendapatan sebenar — tolak baki bawa ke hadapan (item pertama setiap bulan)
+  const pendapatanSebenar = Object.entries(data.kategoriMasuk)
+    .filter(([k]) => !k.toLowerCase().includes('baki'))
+    .reduce((s,[,v]) => s + v, 0);
   const adaData = months.filter(m => m.ada);
   const bakiAkhir = adaData.length ? adaData[adaData.length-1].baki : 0;
   const bakiAwal = adaData.length ? (adaData[0].totalMasuk - adaData[0].totalKeluar === adaData[0].baki ? (adaData[0].baki - (adaData[0].totalMasuk - adaData[0].totalKeluar)) : 0) : 0;
@@ -731,15 +735,20 @@ function renderAnnualSummary(data, tahun) {
   const bakiVals = adaData.map(m => m.baki);
   const chartSvg = buildBakiChart(months);
 
-  // Category breakdowns
-  const catMasukHtml = buildCategoryBars(data.kategoriMasuk, 'var(--green)');
+  // Category breakdowns — exclude 'Baki dari bulan lepas'
+  const filteredMasuk = Object.fromEntries(
+    Object.entries(data.kategoriMasuk).filter(([k]) =>
+      !k.toLowerCase().includes('baki')
+    )
+  );
+  const catMasukHtml = buildCategoryBars(filteredMasuk, 'var(--green)');
   const catKeluarHtml = buildCategoryBars(data.kategoriKeluar, 'var(--red)');
 
   document.getElementById('annual-body').innerHTML = `
     <div class="annual-summary-grid">
       <div class="summary-box">
-        <div class="lbl">Jumlah Kemasukan</div>
-        <div class="val" style="color:var(--green);">RM ${fmtN(totalMasuk)}</div>
+        <div class="lbl">Pendapatan Sebenar</div>
+        <div class="val" style="color:var(--green);">RM ${fmtN(pendapatanSebenar)}</div>
       </div>
       <div class="summary-box">
         <div class="lbl">Jumlah Keluaran</div>
