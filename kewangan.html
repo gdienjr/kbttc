@@ -232,7 +232,7 @@
 <div id="preview-modal">
   <div class="modal-card">
     <div class="modal-header">
-      <h2 id="modal-title">Pratonton Penyata</h2>
+      <h2 id="modal-title">Preview Penyata</h2>
       <button class="modal-close" onclick="closePreview()">✕</button>
     </div>
     <div class="modal-body" id="modal-body"></div>
@@ -343,7 +343,7 @@
 
 <!-- Bottom Action Bar -->
 <div class="bottom-bar">
-  <button class="btn btn-outline" onclick="showPreview()">👁 Pratonton</button>
+  <button class="btn btn-outline" onclick="showPreview()">👁 Preview</button>
   <button class="btn btn-primary" onclick="saveToSheet()">☁ Simpan ke Sheets</button>
 </div>
 
@@ -432,7 +432,7 @@ function updateUrlStatus(url) {
   const sub = document.getElementById('header-sub');
   if (url) {
     el.innerHTML = '<div class="connected-pill"><div class="dot"></div>Disambung ke Google Sheets</div>';
-    sub.textContent = 'Disambung • Data akan disimpan ke Google Sheets';
+    sub.textContent = 'Connected.';
     sub.style.color = 'rgba(255,255,255,0.9)';
   } else {
     el.innerHTML = '';
