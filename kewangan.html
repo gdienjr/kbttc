@@ -486,6 +486,9 @@ async function onMonthChange() {
       }
       renderAll();
       showToast('✓ Data ' + b + t + ' dimuatkan');
+      // Auto-fetch kutipan yuran terkini
+      const yuranIdx = masuk.findIndex(m => m.yuranLink);
+      if (yuranIdx > -1) fetchYuran(yuranIdx);
     } else {
       // Tiada data bulan ini — reset dan fetch baki bulan lepas untuk item 1
       masuk = [
@@ -992,6 +995,9 @@ async function loadFromSheet() {
       if (data.tangan && data.tangan.length) tangan = data.tangan;
       renderAll();
       showToast('✓ Data ' + bulan + tahun + ' dimuatkan');
+      // Auto-fetch kutipan yuran terkini dari Dashboard_Kewangan
+      const yuranIdx = masuk.findIndex(m => m.yuranLink);
+      if (yuranIdx > -1) fetchYuran(yuranIdx);
     } else {
       showToast('Tiada data untuk ' + bulan + tahun);
     }
