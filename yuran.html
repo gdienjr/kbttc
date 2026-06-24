@@ -1,333 +1,422 @@
 <!DOCTYPE html>
 <html lang="ms">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#1a73e8">
-<title>KBTTC Yuran 2026</title>
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:Arial,sans-serif;background:#f0f2f5;min-height:100vh;font-size:16px}
-.header{background:#1a73e8;color:#fff;padding:18px 20px;text-align:center}
-.header h1{font-size:20px;font-weight:700}
-.header p{font-size:13px;opacity:.85;margin-top:3px}
-.tabs{display:flex;background:#fff;border-bottom:2px solid #e0e0e0;position:sticky;top:0;z-index:10}
-.tab{flex:1;padding:15px 8px;text-align:center;font-size:14px;font-weight:600;color:#666;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px}
-.tab.active{color:#1a73e8;border-bottom-color:#1a73e8}
-.page{display:none;padding:16px;max-width:600px;margin:0 auto}
-.page.active{display:block}
-.card{background:#fff;border-radius:14px;padding:18px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
-.card h2{font-size:16px;color:#333;margin-bottom:14px;font-weight:700}
-label{display:block;font-size:13px;color:#555;margin-bottom:6px;font-weight:600}
-input,select{width:100%;padding:12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:15px;color:#333;background:#fff;margin-bottom:14px;-webkit-appearance:none;appearance:none}
-input:focus,select:focus{outline:none;border-color:#1a73e8}
-input:disabled{background:#f5f5f5;color:#999}
-.search-wrap{position:relative;margin-bottom:10px}
-.search-input{width:100%;padding:13px 14px 13px 42px;border:1.5px solid #ddd;border-radius:10px;font-size:15px;color:#333;background:#fff;-webkit-appearance:none;margin-bottom:0}
-.search-input:focus{outline:none;border-color:#1a73e8}
-.search-input:disabled{background:#f5f5f5;color:#999}
-.search-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:#aaa;font-size:18px;pointer-events:none}
-.search-clear{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#aaa;font-size:20px;cursor:pointer;padding:4px 6px;display:none;line-height:1}
-.dropdown{background:#fff;border:1.5px solid #ddd;border-radius:10px;max-height:250px;overflow-y:auto;box-shadow:0 6px 16px rgba(0,0,0,.12);display:none;margin-bottom:10px}
-.dropdown-item{padding:13px 16px;font-size:15px;cursor:pointer;border-bottom:1px solid #f5f5f5;display:flex;justify-content:space-between;align-items:center}
-.dropdown-item:last-child{border-bottom:none}
-.dropdown-item:active{background:#f0f4ff}
-.dropdown-item .no-ahli{font-size:12px;color:#aaa}
-.dropdown-item .vip-tag{background:#f9a825;color:#fff;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:700}
-.dropdown-empty{padding:16px;text-align:center;color:#aaa;font-size:14px}
-.selected-ahli{background:#e8f0fe;border-radius:10px;padding:12px 16px;margin-bottom:12px;display:none;align-items:center;justify-content:space-between}
-.selected-nama{font-size:16px;font-weight:700;color:#1a73e8}
-.selected-no{font-size:12px;color:#888;margin-top:3px}
-.btn-clear-ahli{background:none;border:none;color:#aaa;font-size:22px;cursor:pointer;padding:0 4px}
-.vip-badge{display:inline-block;background:#f9a825;color:#fff;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:700;margin-left:8px;vertical-align:middle}
-.btn{width:100%;padding:15px;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;margin-top:4px;transition:opacity .2s}
-.btn:active{opacity:.85}
-.btn-primary{background:#1a73e8;color:#fff}
-.btn-success{background:#34a853;color:#fff}
-.btn-vip{background:#f9a825;color:#fff;margin-top:12px}
-.btn:disabled{background:#ccc;cursor:not-allowed;opacity:1}
-.status-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px;margin-bottom:6px}
-.bulan-item{border-radius:8px;padding:10px 4px;text-align:center;font-size:12px;font-weight:600}
-.bulan-bayar{background:#e6f4ea;color:#137333}
-.bulan-belum{background:#fce8e6;color:#c5221f}
-.bulan-vip{background:#b7dfbf;color:#1b5e20}
-.bulan-label{font-size:11px;margin-bottom:3px;font-weight:700}
-.alert{border-radius:10px;padding:14px 16px;margin-bottom:14px;font-size:14px;line-height:1.6}
-.alert-success{background:#e6f4ea;color:#137333;border:1px solid #b7dfbf}
-.alert-error{background:#fce8e6;color:#c5221f;border:1px solid #f5c6c2}
-.alert-info{background:#e8f0fe;color:#1a73e8;border:1px solid #c5d8f6}
-.alert-vip{background:#fff8e1;color:#f57f17;border:1px solid #ffe082}
-.loading{text-align:center;padding:24px;color:#666;font-size:14px}
-.divider{border:none;border-top:1px dashed #e0e0e0;margin:16px 0}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KBTTC - Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
 </head>
-<body>
-<div class="header">
-  <h1>KBTTC Yuran 2026</h1>
-  <p>Kedai Buluh Table Tennis Club</p>
-</div>
-<div class="tabs">
-  <div class="tab active" onclick="switchTab('kutip')">Kutip Yuran</div>
-  <div class="tab" onclick="switchTab('daftar')">Daftar Ahli</div>
-</div>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased">
 
-<!-- PAGE: KUTIP YURAN -->
-<div id="page-kutip" class="page active">
-  <div class="card">
-    <h2>Pilih Ahli</h2>
-    <div class="selected-ahli" id="selected-ahli">
-      <div>
-        <div class="selected-nama" id="selected-nama"></div>
-        <div class="selected-no" id="selected-no"></div>
-      </div>
-      <button class="btn-clear-ahli" onclick="clearAhli()">✕</button>
+    <div class="max-w-md w-full mx-auto px-4 py-6 flex-grow flex flex-col gap-6">
+        <!-- Header Pentadbir -->
+        <header class="text-center py-4 flex flex-col items-center">
+            <img src="icon-192.png" alt="KBTTC Logo" class="h-32 object-contain mb-2 drop-shadow-lg rounded-xl" onerror="this.onerror=null; this.src='https://placehold.co/192x192/000000/ffffff?text=KBTTC'">
+            <h1 class="text-2xl font-bold text-slate-900 mt-1">KBTTC Admin</h1>
+            <p class="text-xs text-slate-500 font-medium tracking-wide uppercase">Sistem Pengurusan & Kelulusan Kelab</p>
+        </header>
+
+        <!-- Bahagian 1: Pendaftaran Ahli Baharu Fizikal -->
+        <section class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+            <h3 class="text-base font-bold text-slate-900 mb-2">Pendaftaran Ahli Baru</h3>
+            <p class="text-xs text-slate-500 mb-4">Pendaftaran baru bernilai RM10 (RM5 Yuran Seumur Hidup + RM5 Yuran Bulanan Semasa).</p>
+            
+            <form id="formDaftar" class="space-y-3">
+                <div>
+                    <label for="regNama" class="block text-xs font-semibold text-slate-600 mb-1">Nama Penuh Ahli</label>
+                    <input type="text" id="regNama" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-white" placeholder="Contoh: Mohd Ali" required>
+                </div>
+                <div>
+                    <label for="regPhone" class="block text-xs font-semibold text-slate-600 mb-1">Nombor Telefon Penuh</label>
+                    <input type="tel" id="regPhone" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-white" placeholder="Contoh: 0123456789" required>
+                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-xl transition duration-200 text-sm shadow-md active:scale-[0.98]">
+                    Daftar & Bayar RM10
+                </button>
+            </form>
+        </section>
+
+        <!-- Bahagian 2: Kelulusan Permohonan Pra-Daftar berserta Nota Ahli -->
+        <section class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+            <h3 class="text-base font-bold text-slate-900 mb-1">Kelulusan Permohonan Pra-Daftar</h3>
+            <p class="text-xs text-slate-500 mb-3">Semak dan luluskan permohonan ahli lama yang tiada rekod.</p>
+            
+            <div id="senaraiPraDaftarBox" class="max-h-60 overflow-y-auto border border-slate-100 rounded-xl bg-slate-50/50 p-2 space-y-2">
+                <div class="py-4 text-center text-xs text-slate-400">Memuatkan permohonan baru...</div>
+            </div>
+        </section>
+
+        <!-- Bahagian 3: Carian Dinamik & Perekodan Yuran Bulanan -->
+        <section class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+            <h3 class="text-base font-bold text-slate-900 mb-2">Skrol & Rekod Pembayaran Yuran</h3>
+            <p class="text-xs text-slate-500 mb-4">Cari nama ahli kelab untuk mengemas kini rekod yuran.</p>
+            
+            <div class="mb-4">
+                <input type="text" id="cariAhli" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-slate-50" placeholder="Taip nama atau nombor telefon...">
+            </div>
+            
+            <div id="senaraiAhliBox" class="max-h-60 overflow-y-auto border border-slate-100 rounded-xl bg-slate-50/50 p-2 space-y-2 mb-4">
+                <div class="py-4 text-center text-xs text-slate-400">Memuatkan senarai ahli...</div>
+            </div>
+
+            <!-- Borang Kemas Kini Yuran -->
+            <div id="sectionBayar" class="hidden mt-5 pt-5 border-t border-dashed border-slate-200">
+                <p class="text-xs text-slate-500 mb-1">Kemaskini yuran untuk:</p>
+                <h4 id="namaAhliTerpilih" class="text-base font-bold text-blue-600 mb-4">Nama Ahli</h4>
+                
+                <form id="formBayar" class="space-y-4">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label for="bulanBayar" class="block text-xs font-semibold text-slate-600 mb-1">Bulan Utama</label>
+                            <select id="bulanBayar" class="w-full px-3 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-white">
+                                <option value="Jan">Januari</option>
+                                <option value="Feb">Februari</option>
+                                <option value="Mac">Mac</option>
+                                <option value="Apr">April</option>
+                                <option value="Mei">Mei</option>
+                                <option value="Jun" selected>Jun</option>
+                                <option value="Jul">Julai</option>
+                                <option value="Ogos">Ogos</option>
+                                <option value="Sep">September</option>
+                                <option value="Okt">Oktober</option>
+                                <option value="Nov">November</option>
+                                <option value="Dis">Disember</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="amaunBayar" class="block text-xs font-semibold text-slate-600 mb-1">Jumlah (RM)</label>
+                            <input type="number" id="amaunBayar" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" placeholder="Contoh: 30" min="1" required>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-xl transition duration-200 text-sm shadow-md active:scale-[0.98]">
+                        Sahkan Bayaran Yuran
+                    </button>
+                </form>
+            </div>
+        </section>
     </div>
-    <div class="search-wrap" id="search-wrap">
-      <span class="search-icon">🔍</span>
-      <input type="text" class="search-input" id="search-input"
-        placeholder="Memuatkan..." oninput="filterAhli()" autocomplete="off" disabled>
-      <button class="search-clear" id="search-clear" onclick="clearSearch()">✕</button>
+
+    <!-- Toast Notifikasi Pentadbir -->
+    <div id="toastContainer" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 w-full max-w-xs px-4"></div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-slate-950/40 backdrop-blur-[2px] hidden items-center justify-center z-50 transition-all duration-300">
+        <div class="bg-white p-5 rounded-2xl shadow-xl flex flex-col items-center gap-3">
+            <svg class="animate-spin h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span class="text-sm font-semibold text-slate-700">...</span>
+        </div>
     </div>
-    <div class="dropdown" id="dropdown"></div>
-    <div id="status-ahli" style="display:none">
-      <div class="status-grid" id="grid-status"></div>
-    </div>
-  </div>
 
-  <div class="card" id="card-bayar" style="display:none">
-    <h2>Rekod Bayaran Bulanan</h2>
-    <label>Bulan Semasa</label>
-    <select id="sel-bulan" onchange="previewBayaran()">
-      <option value="Jan">Januari</option><option value="Feb">Februari</option>
-      <option value="Mac">Mac</option><option value="Apr">April</option>
-      <option value="Mei">Mei</option><option value="Jun">Jun</option>
-      <option value="Jul">Julai</option><option value="Ogos">Ogos</option>
-      <option value="Sep">September</option><option value="Okt">Oktober</option>
-      <option value="Nov">November</option><option value="Dis">Disember</option>
-    </select>
-    <label>Amaun Diterima (RM)</label>
-    <input type="number" id="inp-amaun" placeholder="cth: 20" min="5" step="5" oninput="previewBayaran()">
-    <div id="preview-box" style="display:none" class="alert alert-info"></div>
-    <button class="btn btn-primary" id="btn-bayar" onclick="submitBayaran()" disabled>Rekod Bayaran</button>
-    <hr class="divider">
-    <h2 style="margin-bottom:10px">Yuran Tahunan (VIP)</h2>
-    <div class="alert alert-vip" style="margin-bottom:10px;font-size:13px">
-      Bayaran <strong>RM50</strong> — semua 12 bulan akan ditanda hijau
-    </div>
-    <button class="btn btn-vip" id="btn-vip" onclick="submitVip()">Rekod Yuran Tahunan RM50 (VIP)</button>
-  </div>
-  <div id="result-bayar"></div>
-</div>
+    <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbxDm4jEaoWbHfYTPMYJUSEUEp9MTqViHflbyo4ztdIvXG9Wc6ChNADxqWorZTICCSgK/exec";
+    
+    let semuaAhli = [];
+    let semuaPraDaftar = [];
 
-<!-- PAGE: DAFTAR AHLI -->
-<div id="page-daftar" class="page">
-  <div class="card">
-    <h2>Daftar Ahli Baru</h2>
-    <label>Nama Penuh</label>
-    <input type="text" id="inp-nama" placeholder="Nama ahli baru" oninput="validateDaftar()">
-    <label>No. Telefon</label>
-    <input type="tel" id="inp-phone" placeholder="cth: 0123456789">
-    <div class="alert alert-info" style="font-size:13px">
-      Yuran pendaftaran: <strong>RM5</strong> akan direkodkan secara automatik.
-    </div>
-    <br>
-    <button class="btn btn-success" id="btn-daftar" onclick="submitDaftar()" disabled>Daftar Ahli Baru</button>
-  </div>
-  <div id="result-daftar"></div>
-</div>
+    // Memulihkan semula sifar '0' di hadapan nombor telefon secara dinamik di paparan web
+    function formatNoTelPaparan(phone) {
+        let p = (phone || "").toString().trim();
+        if (p === "") return "";
+        // Jika bermula dengan 1, 2, 3... (iaitu digit sifar tercicir di hadapan)
+        if (/^[1-9]/.test(p) && !p.startsWith("60") && p.length >= 8 && p.length <= 11) {
+            p = "0" + p;
+        }
+        return p;
+    }
 
-<script src="api.js"></script>
-<script>
-var _ahliList = [];
-var statusBayaran = {};
-var currentNoAhli = '';
-var BULAN = ['Jan','Feb','Mac','Apr','Mei','Jun','Jul','Ogos','Sep','Okt','Nov','Dis'];
+    // Fungsi mendapatkan ucapan waktu dinamik bagi mesej WA
+    function dapatkanUcapanWaktu() {
+        const jam = new Date().getHours();
+        if (jam >= 5 && jam < 12) {
+            return "Selamat pagi";
+        } else if (jam >= 12 && jam < 14) {
+            return "Selamat tengah hari";
+        } else if (jam >= 14 && jam < 19) {
+            return "Selamat petang";
+        } else {
+            return "Selamat malam";
+        }
+    }
 
-function switchTab(tab) {
-  document.querySelectorAll('.tab').forEach(function(t,i){
-    t.classList.toggle('active',(i===0&&tab==='kutip')||(i===1&&tab==='daftar'));
-  });
-  document.getElementById('page-kutip').classList.toggle('active',tab==='kutip');
-  document.getElementById('page-daftar').classList.toggle('active',tab==='daftar');
-  closeDropdown();
-}
+    // Toast Notifikasi
+    function tunjukMesej(mesej, status = "info") {
+        const container = document.getElementById("toastContainer");
+        const toast = document.createElement("div");
+        
+        let bgClass = "bg-slate-900 text-white";
+        if (status === "success") bgClass = "bg-blue-600 text-white";
+        if (status === "error") bgClass = "bg-rose-600 text-white";
+        
+        toast.className = `${bgClass} px-4 py-3 rounded-xl shadow-lg text-sm font-medium transition-all duration-300 opacity-0 translate-y-2 flex items-center justify-between gap-3`;
+        toast.innerHTML = `<span>${mesej}</span><button class="text-white/60 hover:text-white" onclick="this.parentElement.remove()">✕</button>`;
+        
+        container.appendChild(toast);
+        setTimeout(() => { toast.classList.remove("opacity-0", "translate-y-2"); }, 10);
+        setTimeout(() => {
+            toast.classList.add("opacity-0", "translate-y-2");
+            setTimeout(() => { toast.remove(); }, 300);
+        }, 4000);
+    }
 
-window.onload = function() {
-  document.getElementById('sel-bulan').selectedIndex = new Date().getMonth();
-  document.addEventListener('click', function(e) {
-    if (!e.target.closest('.search-wrap') && !e.target.closest('.dropdown')) closeDropdown();
-  });
-  loadAhliList();
-};
+    function toggleLoading(show) {
+        const overlay = document.getElementById("loadingOverlay");
+        if (show) {
+            overlay.classList.remove("hidden");
+            overlay.classList.add("flex");
+        } else {
+            overlay.classList.add("hidden");
+            overlay.classList.remove("flex");
+        }
+    }
 
-async function loadAhliList() {
-  var inp = document.getElementById('search-input');
-  try {
-    var data = await api('getSenariAhli');
-    _ahliList = data;
-    inp.disabled = false;
-    inp.placeholder = 'Taip nama atau no. ahli...';
-  } catch(e) {
-    inp.placeholder = 'Gagal muatkan — refresh semula';
-  }
-}
+    async function muatSemuaData() {
+        toggleLoading(true);
+        await Promise.all([muatSenaraiAhli(), muatSenaraiPraDaftar()]);
+        toggleLoading(false);
+    }
 
-function filterAhli() {
-  var q = document.getElementById('search-input').value.trim().toLowerCase();
-  document.getElementById('search-clear').style.display = q ? 'block' : 'none';
-  renderDropdown(q);
-  document.getElementById('dropdown').style.display = 'block';
-}
+    async function muatSenaraiAhli() {
+        try {
+            let response = await fetch(`${API_URL}?action=getSenaraiAhli`);
+            let data = await response.json();
+            if(data.status === "success") {
+                semuaAhli = data.data;
+                paparkanAhli(semuaAhli);
+            }
+        } catch (error) {
+            console.error("Gagal muat data ahli", error);
+            tunjukMesej("Gagal memuat turun data ahli.", "error");
+        }
+    }
 
-function renderDropdown(q) {
-  var dd = document.getElementById('dropdown');
-  var filtered = q
-    ? _ahliList.filter(function(a){ return a.nama.toLowerCase().indexOf(q)>=0 || String(a.noAhli).indexOf(q)>=0; })
-    : _ahliList;
-  if (filtered.length===0) {
-    dd.innerHTML = '<div class="dropdown-empty">Tiada ahli dijumpai</div>';
-  } else {
-    dd.innerHTML = filtered.map(function(a){
-      var vipTag = a.status==='VIP' ? '<span class="vip-tag">VIP</span>' : '';
-      return '<div class="dropdown-item" onclick="selectAhli(\''+a.noAhli+'\',\''+escHtml(a.nama)+'\',\''+a.status+'\')">'+
-        '<span>'+escHtml(a.nama)+' '+vipTag+'</span>'+
-        '<span class="no-ahli">'+a.noAhli+'</span></div>';
-    }).join('');
-  }
-}
+    async function muatSenaraiPraDaftar() {
+        try {
+            let response = await fetch(`${API_URL}?action=getSenaraiPraDaftar`);
+            let data = await response.json();
+            if(data.status === "success") {
+                semuaPraDaftar = data.data;
+                paparkanPraDaftar(semuaPraDaftar);
+            }
+        } catch (error) {
+            console.error("Gagal muat data pra-daftar", error);
+        }
+    }
 
-function escHtml(s){ return s.replace(/'/g,"&#39;").replace(/"/g,"&quot;"); }
+    function paparkanPraDaftar(senarai) {
+        const box = document.getElementById("senaraiPraDaftarBox");
+        box.innerHTML = "";
+        
+        let pendingList = senarai.filter(p => p.status === "Menunggu Kelulusan");
+        
+        if(pendingList.length === 0) {
+            box.innerHTML = '<div class="py-4 text-center text-xs text-slate-400">Tiada permohonan pra-daftar yang menunggu kelulusan.</div>';
+            return;
+        }
+        
+        pendingList.forEach((pemohon) => {
+            let div = document.createElement("div");
+            div.className = "p-3 bg-white border border-slate-100 rounded-xl shadow-xs space-y-2";
+            
+            // Paparkan kotak nota ahli lama sekiranya ada
+            let notaHtml = pemohon.nota 
+                ? `<div class="mt-2 p-2 bg-amber-50/50 border border-amber-100 rounded-lg text-xs text-slate-600 leading-relaxed"><strong>Nota Ahli:</strong> ${pemohon.nota}</div>` 
+                : '';
+            
+            let phonePaparan = formatNoTelPaparan(pemohon.phone);
+            
+            div.innerHTML = `
+                <div class="flex justify-between items-start">
+                    <div class="flex-1 min-w-0">
+                        <h4 class="text-sm font-bold text-slate-800 truncate">${pemohon.nama}</h4>
+                        <p class="text-xs text-slate-500 font-mono">${phonePaparan}</p>
+                        <p class="text-[10px] text-slate-400 mt-1">Diterima: ${pemohon.tarikh}</p>
+                        ${notaHtml}
+                    </div>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 shrink-0">Menunggu</span>
+                </div>
+                <div class="flex gap-2 pt-1">
+                    <button class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-1.5 px-3 rounded-lg text-xs transition duration-200" onclick="prosesPraDaftarSelesai('${pemohon.nama}', '${pemohon.phone}', 'lulus')">Lulus & WA</button>
+                    <button class="flex-1 bg-rose-600 hover:bg-rose-700 text-white font-semibold py-1.5 px-3 rounded-lg text-xs transition duration-200" onclick="prosesPraDaftarSelesai('${pemohon.nama}', '${pemohon.phone}', 'tolak')">Tolak & WA</button>
+                </div>
+            `;
+            box.appendChild(div);
+        });
+    }
 
-function closeDropdown(){ document.getElementById('dropdown').style.display='none'; }
+    function formatNoTelWhatsApp(phone) {
+        let clean = phone.toString().replace(/[^0-9]/g, "");
+        if (clean.startsWith("0")) {
+            clean = "6" + clean;
+        } else if (!clean.startsWith("60") && clean.startsWith("1")) {
+            clean = "60" + clean;
+        }
+        return clean;
+    }
 
-function clearSearch(){
-  document.getElementById('search-input').value='';
-  document.getElementById('search-clear').style.display='none';
-  renderDropdown('');
-}
+    async function prosesPraDaftarSelesai(nama, phone, tindakan) {
+        toggleLoading(true);
+        let apiAction = tindakan === "lulus" ? "lulusPraDaftar" : "tolakPraDaftar";
+        
+        let payload = {
+            action: apiAction,
+            nama: nama,
+            phone: phone
+        };
+        
+        try {
+            let res = await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
+            let hasil = await res.json();
+            toggleLoading(false);
+            
+            if (hasil.status === "success") {
+                tunjukMesej(hasil.message, "success");
+                
+                let formattedPhone = formatNoTelWhatsApp(phone);
+                let ucapan = dapatkanUcapanWaktu();
+                let mesej = "";
+                
+                if (tindakan === "lulus") {
+                    mesej = `${ucapan} ${nama},\n\nPermohonan pra-daftar anda untuk *Kedai Buluh Table Tennis Club (KBTTC)* telah *DILULUSKAN*! 🎉🏓\n\nRekod keahlian lama anda kini telah berjaya dikemaskini dan aktif semula di dalam sistem digital kami.\n\nAnda boleh menyemak status yuran bulanan anda pada bila-bila masa di Portal Semakan Ahli kami.\n\nTerima kasih!`;
+                } else {
+                    mesej = `${ucapan} ${nama},\n\nTerima kasih atas minat anda terhadap *Kedai Buluh Table Tennis Club (KBTTC)*.\n\nDukacita dimaklumkan bahawa permohonan pra-daftar anda tidak dapat diluluskan buat masa ini.\n\nSila hubungi Admin untuk maklumat lanjut. Terima kasih.`;
+                }
+                
+                let waUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(mesej)}`;
+                window.open(waUrl, '_blank');
+                
+                muatSemuaData();
+            } else {
+                tunjukMesej("Gagal memproses permohonan: " + hasil.message, "error");
+            }
+        } catch (error) {
+            toggleLoading(false);
+            tunjukMesej("Ralat sambungan rangkaian.", "error");
+        }
+    }
 
-async function selectAhli(noAhli, nama, status) {
-  currentNoAhli = noAhli;
-  closeDropdown();
-  document.getElementById('search-wrap').style.display = 'none';
-  var sel = document.getElementById('selected-ahli');
-  sel.style.display = 'flex';
-  document.getElementById('selected-nama').innerHTML = nama+(status==='VIP'?'<span class="vip-badge">VIP</span>':'');
-  document.getElementById('selected-no').textContent = 'No. Ahli: '+noAhli;
-  document.getElementById('status-ahli').style.display = 'none';
-  document.getElementById('card-bayar').style.display = 'none';
-  document.getElementById('result-bayar').innerHTML = '';
-  statusBayaran = {};
-  document.getElementById('grid-status').innerHTML = '<div class="loading">Memuatkan status...</div>';
-  document.getElementById('status-ahli').style.display = 'block';
+    function paparkanAhli(senarai) {
+        const box = document.getElementById("senaraiAhliBox");
+        box.innerHTML = "";
+        if(senarai.length === 0) {
+            box.innerHTML = '<div class="py-4 text-center text-xs text-slate-400">Tiada ahli ditemui</div>';
+            return;
+        }
+        senarai.forEach(ahli => {
+            let div = document.createElement("div");
+            div.className = "flex justify-between items-center p-3 bg-white border border-slate-100 rounded-xl shadow-xs cursor-pointer hover:bg-blue-50/50 transition duration-150";
+            let statusVip = ahli.vip === "VIP AKTIF" || ahli.vip === true
+                ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">VIP</span>` 
+                : `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-50 text-slate-600 border border-slate-200">Ahli</span>`;
+            
+            let phonePaparan = formatNoTelPaparan(ahli.phone);
+            
+            div.innerHTML = `
+                <div>
+                    <h4 class="text-sm font-semibold text-slate-800">${ahli.nama}</h4>
+                    <p class="text-xs text-slate-500 font-mono">${phonePaparan}</p>
+                </div> 
+                ${statusVip}
+            `;
+            div.onclick = () => pilihAhli(ahli.nama);
+            box.appendChild(div);
+        });
+    }
 
-  try {
-    var data = await api('getStatusBayaran', { noAhli });
-    if (!data) return;
-    var grid = document.getElementById('grid-status');
-    grid.innerHTML = '';
-    statusBayaran = data.status;
-    BULAN.forEach(function(b){
-      var val = data.status[b];
-      var cls = data.isVip ? 'bulan-vip' : (val ? 'bulan-bayar' : 'bulan-belum');
-      var div = document.createElement('div');
-      div.className = 'bulan-item '+cls;
-      div.innerHTML = '<div class="bulan-label">'+b+'</div>'+(data.isVip?'★':(val?'RM'+val:'-'));
-      grid.appendChild(div);
-    });
-    document.getElementById('card-bayar').style.display = 'block';
-    document.getElementById('inp-amaun').value = '';
-    document.getElementById('preview-box').style.display = 'none';
-    document.getElementById('btn-bayar').disabled = true;
-    document.getElementById('btn-vip').disabled = data.isVip;
-    document.getElementById('btn-vip').textContent = data.isVip ? 'Sudah VIP' : 'Rekod Yuran Tahunan RM50 (VIP)';
-  } catch(e) {
-    document.getElementById('grid-status').innerHTML = '<div class="loading">Gagal muatkan status.</div>';
-  }
-}
+    // Carian dinamik & automatik yang menyokong padanan nombor tanpa sifar
+    document.getElementById("cariAhli").oninput = function(e) {
+        let keyword = e.target.value.toLowerCase().trim();
+        
+        // Padanan pintar: Jika keyword bermula sifar, wujudkan juga variasi tanpa sifar
+        let keywordTanpaSifar = keyword;
+        if (keyword.startsWith("0")) {
+            keywordTanpaSifar = keyword.substring(1);
+        }
+        
+        let filtered = semuaAhli.filter(a => {
+            let nama = (a.nama || "").toString().toLowerCase();
+            let phone = (a.phone || "").toString().toLowerCase();
+            return nama.includes(keyword) || phone.includes(keyword) || phone.includes(keywordTanpaSifar);
+        });
+        paparkanAhli(filtered);
+    };
 
-function clearAhli() {
-  currentNoAhli = ''; statusBayaran = {};
-  document.getElementById('selected-ahli').style.display = 'none';
-  document.getElementById('search-wrap').style.display = 'block';
-  document.getElementById('search-input').value = '';
-  document.getElementById('search-clear').style.display = 'none';
-  document.getElementById('status-ahli').style.display = 'none';
-  document.getElementById('card-bayar').style.display = 'none';
-  document.getElementById('result-bayar').innerHTML = '';
-  document.getElementById('search-input').focus();
-}
+    function pilihAhli(nama) {
+        document.getElementById("namaAhliTerpilih").innerText = nama;
+        document.getElementById("sectionBayar").classList.remove("hidden");
+        document.getElementById("sectionBayar").scrollIntoView({ behavior: 'smooth' });
+    }
 
-function previewBayaran() {
-  var amaun = parseFloat(document.getElementById('inp-amaun').value)||0;
-  var bulanSemasa = document.getElementById('sel-bulan').value;
-  var preview = document.getElementById('preview-box');
-  var btn = document.getElementById('btn-bayar');
-  if (amaun<5) { preview.style.display='none'; btn.disabled=true; return; }
-  var bulanIdx = BULAN.indexOf(bulanSemasa), baki = amaun, akan = [];
-  if (!statusBayaran[bulanSemasa]||statusBayaran[bulanSemasa]==='') { akan.push(bulanSemasa); baki-=5; }
-  for (var b=bulanIdx-1; b>=0; b--) {
-    if (baki<5) break;
-    if (!statusBayaran[BULAN[b]]||statusBayaran[BULAN[b]]==='') { akan.push(BULAN[b]); baki-=5; }
-  }
-  var msg = akan.length>0 ? 'Bulan yang akan direkod: <strong>'+akan.join(', ')+'</strong> ('+akan.length+' bulan)' : 'Semua bulan sudah dibayar.';
-  if (baki>0&&akan.length>0) msg += '<br>Baki: <strong>RM'+baki.toFixed(2)+'</strong> tidak direkod';
-  preview.style.display='block'; preview.innerHTML=msg;
-  btn.disabled = akan.length===0;
-}
+    document.getElementById("formDaftar").onsubmit = async function(e) {
+        e.preventDefault();
+        toggleLoading(true);
+        let payload = {
+            action: "daftarAhli",
+            nama: document.getElementById("regNama").value.trim(),
+            phone: document.getElementById("regPhone").value.trim()
+        };
+        
+        try {
+            let res = await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
+            let hasil = await res.json();
+            toggleLoading(false);
+            if(hasil.status === "success") {
+                tunjukMesej(hasil.message, "success");
+                document.getElementById("formDaftar").reset();
+                muatSemuaData();
+            } else {
+                tunjukMesej(hasil.message, "error");
+            }
+        } catch(err) {
+            toggleLoading(false);
+            tunjukMesej("Gagal mendaftar ahli. Ralat rangkaian.", "error");
+        }
+    };
 
-async function submitBayaran() {
-  var btn = document.getElementById('btn-bayar');
-  var amaun = document.getElementById('inp-amaun').value;
-  var bulan = document.getElementById('sel-bulan').value;
-  btn.disabled=true; btn.textContent='Merekod...';
-  try {
-    var res = await api('rekodBayaran', { noAhli: currentNoAhli, amaun, bulanSemasa: bulan });
-    btn.textContent='Rekod Bayaran';
-    var div = document.getElementById('result-bayar');
-    if (res.success) {
-      div.innerHTML = '<div class="alert alert-success"><strong>'+res.nama+'</strong><br>Bulan direkod: <strong>'+res.bulanDibayar.join(', ')+'</strong><br>Jumlah: <strong>RM'+res.jumlahDirekod+'</strong>'+(res.baki>0?'<br>Baki RM'+res.baki.toFixed(2)+' tidak direkod.':'')+'</div>';
-      selectAhli(currentNoAhli, res.nama, res.isVip?'VIP':'Aktif');
-    } else { div.innerHTML='<div class="alert alert-error">'+res.msg+'</div>'; btn.disabled=false; }
-  } catch(e) { btn.textContent='Rekod Bayaran'; btn.disabled=false; document.getElementById('result-bayar').innerHTML='<div class="alert alert-error">Ralat: '+e.message+'</div>'; }
-}
+    document.getElementById("formBayar").onsubmit = async function(e) {
+        e.preventDefault();
+        toggleLoading(true);
+        let payload = {
+            action: "rekodBayaran",
+            nama: document.getElementById("namaAhliTerpilih").innerText,
+            bulanSemasa: document.getElementById("bulanBayar").value,
+            amaun: document.getElementById("amaunBayar").value
+        };
+        
+        try {
+            let res = await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
+            let hasil = await res.json();
+            toggleLoading(false);
+            if(hasil.status === "success") {
+                tunjukMesej(hasil.message, "success");
+                document.getElementById("sectionBayar").classList.add("hidden");
+                document.getElementById("formBayar").reset();
+                muatSemuaData();
+            } else {
+                tunjukMesej(hasil.message, "error");
+            }
+        } catch(err) {
+            toggleLoading(false);
+            tunjukMesej("Gagal memproses bayaran yuran.", "error");
+        }
+    };
 
-async function submitVip() {
-  if (!currentNoAhli) return;
-  if (!confirm('Confirm rekod yuran tahunan RM50?')) return;
-  var btn = document.getElementById('btn-vip');
-  btn.disabled=true; btn.textContent='Merekod...';
-  try {
-    var res = await api('rekodYuranTahunan', { noAhli: currentNoAhli });
-    var div = document.getElementById('result-bayar');
-    if (res.success) {
-      div.innerHTML='<div class="alert alert-vip"><strong>'+res.nama+'</strong> kini Ahli VIP! Semua 12 bulan ditanda hijau.</div>';
-      selectAhli(currentNoAhli, res.nama, 'VIP');
-      loadAhliList();
-    } else { btn.textContent='Rekod Yuran Tahunan RM50 (VIP)'; btn.disabled=false; div.innerHTML='<div class="alert alert-error">'+res.msg+'</div>'; }
-  } catch(e) { btn.textContent='Rekod Yuran Tahunan RM50 (VIP)'; btn.disabled=false; document.getElementById('result-bayar').innerHTML='<div class="alert alert-error">Ralat: '+e.message+'</div>'; }
-}
-
-function validateDaftar(){
-  document.getElementById('btn-daftar').disabled = document.getElementById('inp-nama').value.trim().length<2;
-}
-
-async function submitDaftar() {
-  var nama = document.getElementById('inp-nama').value.trim();
-  var phone = document.getElementById('inp-phone').value.trim();
-  var btn = document.getElementById('btn-daftar');
-  btn.disabled=true; btn.textContent='Mendaftar...';
-  try {
-    var res = await api('daftarAhliBaru', { nama, noPhone: phone });
-    btn.textContent='Daftar Ahli Baru';
-    var div = document.getElementById('result-daftar');
-    if (res.success) {
-      div.innerHTML='<div class="alert alert-success">Berjaya didaftarkan!<br>Nama: <strong>'+res.nama+'</strong><br>No. Ahli: <strong>'+res.noAhli+'</strong></div>';
-      document.getElementById('inp-nama').value=''; document.getElementById('inp-phone').value='';
-      btn.disabled=true; loadAhliList();
-    } else { div.innerHTML='<div class="alert alert-error">'+res.msg+'</div>'; btn.disabled=false; }
-  } catch(e) { btn.textContent='Daftar Ahli Baru'; btn.disabled=false; document.getElementById('result-daftar').innerHTML='<div class="alert alert-error">Ralat: '+e.message+'</div>'; }
-}
+    window.onload = muatSemuaData;
 </script>
 </body>
 </html>
