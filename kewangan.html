@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Penyata Kewangan</title>
+<title>Penyata Kewangan KBTTC</title>
 <style>
   :root {
     --green: #1a7a4a;
@@ -260,7 +260,7 @@
       <div style="margin-bottom:10px;">
         <label style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:5px;">URL Google Apps Script</label>
         <div class="url-input-group">
-          <input type="text" id="script-url" placeholder="https://script.google.com/macros/s/AKfycbw7WjY88GOuDDg3CUvKcE0xe-yKm8_gzO75tfQq5wEoH9t1j73P3OVzxSJXA0apo9yE/exec" style="font-size:12px;">
+          <input type="text" id="script-url" placeholder="https://script.google.com/macros/s/..." style="font-size:12px;">
           <button class="btn btn-primary" style="padding:9px 14px; white-space:nowrap;" onclick="saveUrl()">Simpan</button>
         </div>
       </div>
@@ -272,11 +272,11 @@
   <div class="month-card">
     <select id="bulan" onchange="onMonthChange()">
       <option>JAN</option><option>FEB</option><option>MAC</option><option>APR</option>
-      <option>MEI</option><option selected>JUN</option><option>JUL</option><option>OGOS</option>
+      <option>MEI</option><option>JUN</option><option>JUL</option><option>OGOS</option>
       <option>SEP</option><option>OKT</option><option>NOV</option><option>DIS</option>
     </select>
     <select id="tahun" onchange="onMonthChange()">
-      <option>2025</option><option selected>2026</option><option>2027</option><option>2028</option>
+      <option>2025</option><option>2026</option><option>2027</option><option>2028</option>
     </select>
     <button class="icon-btn" onclick="loadFromSheet()" title="Muat data dari Google Sheets">
       ↻
@@ -414,7 +414,7 @@ const STORAGE_KEY = 'kbttc_script_url';
 function fmt(n) { return 'RM ' + parseFloat(n || 0).toFixed(2); }
 function fmtN(n) { return parseFloat(n || 0).toFixed(2); }
 function sumArr(arr) { return arr.reduce((s, x) => s + parseFloat(x.amt || 0), 0); }
-function getUrl() { return 'https://script.google.com/macros/s/AKfycbw7WjY88GOuDDg3CUvKcE0xe-yKm8_gzO75tfQq5wEoH9t1j73P3OVzxSJXA0apo9yE/exec'; }
+function getUrl() { return 'https://script.google.com/macros/s/AKfycbxgBxahykQ_fYZ8x1ip592hTvN3mo1mt5-9XlPLjkgXXnT6ds07uAArgDVf23PcjRXi/exec'; }
 
 // URL setup
 function saveUrl() {
@@ -486,9 +486,6 @@ async function onMonthChange() {
       }
       renderAll();
       showToast('✓ Data ' + b + t + ' dimuatkan');
-      // Auto-fetch kutipan yuran terkini
-      const yuranIdx = masuk.findIndex(m => m.yuranLink);
-      if (yuranIdx > -1) fetchYuran(yuranIdx);
     } else {
       // Tiada data bulan ini — reset dan fetch baki bulan lepas untuk item 1
       masuk = [
@@ -995,9 +992,6 @@ async function loadFromSheet() {
       if (data.tangan && data.tangan.length) tangan = data.tangan;
       renderAll();
       showToast('✓ Data ' + bulan + tahun + ' dimuatkan');
-      // Auto-fetch kutipan yuran terkini dari Dashboard_Kewangan
-      const yuranIdx = masuk.findIndex(m => m.yuranLink);
-      if (yuranIdx > -1) fetchYuran(yuranIdx);
     } else {
       showToast('Tiada data untuk ' + bulan + tahun);
     }
@@ -1075,6 +1069,12 @@ if (savedUrl) {
   document.getElementById('url-setup-body').style.display = 'none';
   document.getElementById('url-toggle-label').textContent = 'Tetapan';
 }
+// Auto-select bulan & tahun semasa
+const _now = new Date();
+const _bulanList = ['JAN','FEB','MAC','APR','MEI','JUN','JUL','OGOS','SEP','OKT','NOV','DIS'];
+document.getElementById('bulan').value = _bulanList[_now.getMonth()];
+document.getElementById('tahun').value = String(_now.getFullYear());
+
 onMonthChange();
 renderAll();
 
