@@ -272,11 +272,11 @@
   <div class="month-card">
     <select id="bulan" onchange="onMonthChange()">
       <option>JAN</option><option>FEB</option><option>MAC</option><option>APR</option>
-      <option>MEI</option><option>JUN</option><option>JUL</option><option>OGOS</option>
+      <option>MEI</option><option selected>JUN</option><option>JUL</option><option>OGOS</option>
       <option>SEP</option><option>OKT</option><option>NOV</option><option>DIS</option>
     </select>
     <select id="tahun" onchange="onMonthChange()">
-      <option>2025</option><option>2026</option><option>2027</option><option>2028</option>
+      <option>2025</option><option selected>2026</option><option>2027</option><option>2028</option>
     </select>
     <button class="icon-btn" onclick="loadFromSheet()" title="Muat data dari Google Sheets">
       ↻
@@ -414,7 +414,7 @@ const STORAGE_KEY = 'kbttc_script_url';
 function fmt(n) { return 'RM ' + parseFloat(n || 0).toFixed(2); }
 function fmtN(n) { return parseFloat(n || 0).toFixed(2); }
 function sumArr(arr) { return arr.reduce((s, x) => s + parseFloat(x.amt || 0), 0); }
-function getUrl() { return 'https://script.google.com/macros/s/AKfycbxgBxahykQ_fYZ8x1ip592hTvN3mo1mt5-9XlPLjkgXXnT6ds07uAArgDVf23PcjRXi/exec'; }
+function getUrl() { return 'https://script.google.com/macros/s/AKfycbw7WjY88GOuDDg3CUvKcE0xe-yKm8_gzO75tfQq5wEoH9t1j73P3OVzxSJXA0apo9yE/exec'; }
 
 // URL setup
 function saveUrl() {
@@ -568,6 +568,22 @@ function renderList(type, arr) {
         </div>
         <button class="del-btn" onclick="removeItem('${type}',${i})" aria-label="Padam">✕</button>
       `;
+    } else if (item.newItem) {
+      const isAcc = item.accumulate;
+      row.innerHTML = `
+        <span class="item-num">${i + 1}</span>
+        <input type="text" placeholder="Keterangan" value="${escHtml(item.label)}"
+          oninput="updateLabel('${type}',${i},this.value)">
+        <div style="display:flex;gap:4px;align-items:center;flex-shrink:0;">
+          <input type="number" placeholder="0.00" step="0.01" min="0" value="${item.amt}"
+            oninput="updateAmt('${type}',${i},this.value)" style="width:${isAcc?'68px':'82px'};">
+          ${isAcc ? `<button onclick="openAddPopup('${type}',${i})" title="Tambah nilai"
+            style="width:30px;height:36px;border-radius:6px;border:1px solid var(--border);background:#eff6ff;color:#2563eb;font-size:18px;font-weight:600;cursor:pointer;flex-shrink:0;line-height:1;">+</button>` : ''}
+          <button onclick="toggleAccumulate('${type}',${i})" title="${isAcc ? 'Matikan butang +' : 'Hidupkan butang +'}"
+            style="width:30px;height:36px;border-radius:6px;border:1px solid var(--border);background:${isAcc ? 'var(--green-light)' : 'var(--gray-light)'};color:${isAcc ? 'var(--green)' : 'var(--text-muted)'};font-size:13px;cursor:pointer;flex-shrink:0;">⊕</button>
+        </div>
+        <button class="del-btn" onclick="removeItem('${type}',${i})" aria-label="Padam">✕</button>
+      `;
     } else {
       row.innerHTML = `
         <span class="item-num">${i + 1}</span>
@@ -621,14 +637,20 @@ function updateLabel(type, i, v) { (type==='masuk'?masuk:keluar)[i].label = v; }
 function updateAmt(type, i, v) { (type==='masuk'?masuk:keluar)[i].amt = v; updateTotals(); }
 
 function addItem(type) {
-  (type==='masuk'?masuk:keluar).push({ label:'', amt:'' });
+  (type==='masuk'?masuk:keluar).push({ label:'', amt:'', accumulate: false, newItem: true });
   renderList(type, type==='masuk'?masuk:keluar);
   updateTotals();
-  // Focus last input
   setTimeout(() => {
     const rows = document.querySelectorAll(`#${type}-list .item-row`);
     if (rows.length) rows[rows.length-1].querySelector('input[type="text"]').focus();
   }, 50);
+}
+
+function toggleAccumulate(type, i) {
+  const arr = type === 'masuk' ? masuk : keluar;
+  arr[i].accumulate = !arr[i].accumulate;
+  renderList(type, arr);
+  updateTotals();
 }
 
 function removeItem(type, i) {
@@ -1069,12 +1091,6 @@ if (savedUrl) {
   document.getElementById('url-setup-body').style.display = 'none';
   document.getElementById('url-toggle-label').textContent = 'Tetapan';
 }
-// Auto-select bulan & tahun semasa
-const _now = new Date();
-const _bulanList = ['JAN','FEB','MAC','APR','MEI','JUN','JUL','OGOS','SEP','OKT','NOV','DIS'];
-document.getElementById('bulan').value = _bulanList[_now.getMonth()];
-document.getElementById('tahun').value = String(_now.getFullYear());
-
 onMonthChange();
 renderAll();
 
