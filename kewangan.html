@@ -538,7 +538,19 @@ function renderList(type, arr) {
   arr.forEach((item, i) => {
     const row = document.createElement('div');
     row.className = 'item-row';
-    if (item.yuranLink) {
+    // "Baki dari bulan lepas" ialah item auto-isi dari bulan sebelumnya -
+    // ia TAK PATUT ada butang ⊕/+ langsung, kekal plain sentiasa.
+    const isBakiCarryForward = type === 'masuk' && /baki.*bulan.*lepas/i.test(item.label || '');
+    if (isBakiCarryForward) {
+      row.innerHTML = `
+        <span class="item-num">${i + 1}</span>
+        <input type="text" placeholder="Keterangan" value="${escHtml(item.label)}"
+          oninput="updateLabel('${type}',${i},this.value)">
+        <input type="number" placeholder="0.00" step="0.01" min="0" value="${item.amt}"
+          oninput="updateAmt('${type}',${i},this.value)">
+        <button class="del-btn" onclick="removeItem('${type}',${i})" aria-label="Padam">✕</button>
+      `;
+    } else if (item.yuranLink) {
       row.innerHTML = `
         <span class="item-num">${i + 1}</span>
         <input type="text" placeholder="Keterangan" value="${escHtml(item.label)}"
