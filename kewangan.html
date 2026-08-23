@@ -551,20 +551,10 @@ function renderList(type, arr) {
         </div>
         <button class="del-btn" onclick="removeItem('${type}',${i})" aria-label="Padam">✕</button>
       `;
-    } else if (item.accumulate) {
-      row.innerHTML = `
-        <span class="item-num">${i + 1}</span>
-        <input type="text" placeholder="Keterangan" value="${escHtml(item.label)}"
-          oninput="updateLabel('${type}',${i},this.value)">
-        <div style="display:flex;gap:4px;align-items:center;flex-shrink:0;">
-          <input type="number" placeholder="0.00" step="0.01" min="0" value="${item.amt}"
-            oninput="updateAmt('${type}',${i},this.value)" style="width:82px;">
-          <button onclick="openAddPopup('${type}',${i})" title="Tambah nilai"
-            style="width:30px;height:36px;border-radius:6px;border:1px solid var(--border);background:#eff6ff;color:#2563eb;font-size:18px;font-weight:600;cursor:pointer;flex-shrink:0;line-height:1;">+</button>
-        </div>
-        <button class="del-btn" onclick="removeItem('${type}',${i})" aria-label="Padam">✕</button>
-      `;
-    } else if (item.newItem) {
+    } else {
+      // Semua item lain (default ATAU tambahan) sentiasa ada butang toggle ⊕
+      // supaya butang '+' boleh dihidupkan/matikan bila-bila masa, tak kira
+      // asal item tu wujud dari mula atau ditambah kemudian.
       const isAcc = item.accumulate;
       row.innerHTML = `
         <span class="item-num">${i + 1}</span>
@@ -578,15 +568,6 @@ function renderList(type, arr) {
           <button onclick="toggleAccumulate('${type}',${i})" title="${isAcc ? 'Matikan butang +' : 'Hidupkan butang +'}"
             style="width:30px;height:36px;border-radius:6px;border:1px solid var(--border);background:${isAcc ? 'var(--green-light)' : 'var(--gray-light)'};color:${isAcc ? 'var(--green)' : 'var(--text-muted)'};font-size:13px;cursor:pointer;flex-shrink:0;">⊕</button>
         </div>
-        <button class="del-btn" onclick="removeItem('${type}',${i})" aria-label="Padam">✕</button>
-      `;
-    } else {
-      row.innerHTML = `
-        <span class="item-num">${i + 1}</span>
-        <input type="text" placeholder="Keterangan" value="${escHtml(item.label)}"
-          oninput="updateLabel('${type}',${i},this.value)">
-        <input type="number" placeholder="0.00" step="0.01" min="0" value="${item.amt}"
-          oninput="updateAmt('${type}',${i},this.value)">
         <button class="del-btn" onclick="removeItem('${type}',${i})" aria-label="Padam">✕</button>
       `;
     }
