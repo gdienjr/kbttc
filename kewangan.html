@@ -469,14 +469,10 @@ async function onMonthChange() {
     const res = await fetch(`${url}?action=load&bulan=${b}&tahun=${t}`);
     const data = await res.json();
     if (data.success) {
-      if (data.masuk && data.masuk.length) masuk = data.masuk.map((m,i) => {
-        const flags = [{},{yuranLink:true},{accumulate:true},{accumulate:true},{accumulate:true}];
-        return Object.assign({}, flags[i] || {}, m);
-      });
-      if (data.keluar && data.keluar.length) keluar = data.keluar.map((k,i) => {
-        const flags = [{},{},{accumulate:true},{accumulate:true}];
-        return Object.assign({}, flags[i] || {}, k);
-      });
+      // Flag (accumulate/yuranLink/newItem) kini datang terus dari Sheets
+      // (lajur tersembunyi E-I), jadi tak perlu teka ikut kedudukan lagi.
+      if (data.masuk && data.masuk.length) masuk = data.masuk;
+      if (data.keluar && data.keluar.length) keluar = data.keluar;
       if (data.tangan && data.tangan.length) {
         tangan = data.tangan.map((t,i) => {
           if (i===0) return Object.assign({auto:true},t);
@@ -1083,7 +1079,31 @@ function showToast(msg) {
   toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
 }
 
+// Tetapkan dropdown bulan & tahun ikut tarikh SEBENAR peranti (bukan hardcode)
+function setCurrentMonthYear() {
+  const months = ['JAN','FEB','MAC','APR','MEI','JUN','JUL','OGOS','SEP','OKT','NOV','DIS'];
+  const now = new Date();
+  const bulanSemasa = months[now.getMonth()];
+  const tahunSemasa = String(now.getFullYear());
+
+  const bulanSel = document.getElementById('bulan');
+  const tahunSel = document.getElementById('tahun');
+
+  bulanSel.value = bulanSemasa;
+
+  // Kalau tahun semasa tiada dalam senarai <option>, tambah secara automatik
+  let tahunWujud = Array.from(tahunSel.options).some(o => o.value === tahunSemasa);
+  if (!tahunWujud) {
+    const opt = document.createElement('option');
+    opt.value = tahunSemasa;
+    opt.textContent = tahunSemasa;
+    tahunSel.appendChild(opt);
+  }
+  tahunSel.value = tahunSemasa;
+}
+
 // Init
+setCurrentMonthYear();
 const savedUrl = getUrl();
 if (savedUrl) {
   document.getElementById('script-url').value = savedUrl;
@@ -1105,26 +1125,10 @@ async function autoLoadOnOpen() {
     const res = await fetch(`${url}?action=load&bulan=${bulan}&tahun=${tahun}`);
     const data = await res.json();
     if (data.success) {
-      if (data.masuk && data.masuk.length) masuk = data.masuk.map((m,i) => {
-        // Kekalkan flag yuranLink dan accumulate ikut index asal
-        const flags = [
-          {},
-          { yuranLink: true },
-          { accumulate: true },
-          { accumulate: true },
-          { accumulate: true },
-        ];
-        return Object.assign({}, flags[i] || {}, m);
-      });
-      if (data.keluar && data.keluar.length) keluar = data.keluar.map((k,i) => {
-        const flags = [
-          {},
-          {},
-          { accumulate: true },
-          { accumulate: true },
-        ];
-        return Object.assign({}, flags[i] || {}, k);
-      });
+      // Flag (accumulate/yuranLink/newItem) kini datang terus dari Sheets
+      // (lajur tersembunyi E-I), jadi tak perlu teka ikut kedudukan lagi.
+      if (data.masuk && data.masuk.length) masuk = data.masuk;
+      if (data.keluar && data.keluar.length) keluar = data.keluar;
       if (data.tangan && data.tangan.length) {
         tangan = data.tangan.map((t,i) => {
           if (i === 0) return Object.assign({ auto: true }, t);
