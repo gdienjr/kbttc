@@ -415,6 +415,14 @@ function fmtN(n) { return parseFloat(n || 0).toFixed(2); }
 function sumArr(arr) { return arr.reduce((s, x) => s + parseFloat(x.amt || 0), 0); }
 function getUrl() { return 'https://script.google.com/macros/s/AKfycbw0KMsPGj9Zym1n7x_KPAhvLiE5aLHtYDybSiTbbxWz3Fb0bm4z1dWlrIk7ZuCLPW-x/exec'; }
 
+// Helper: fetch GET dengan cache-busting supaya browser mobile (terutama
+// Safari iOS) tak sajikan response lama dari cache. Semua panggilan GET
+// ke Apps Script patut guna fungsi ni, bukan fetch() terus.
+function fetchNoCache(url) {
+  const sep = url.includes('?') ? '&' : '?';
+  return fetch(url + sep + '_t=' + Date.now(), { cache: 'no-store' });
+}
+
 // URL setup
 function saveUrl() {
   const url = document.getElementById('script-url').value.trim();
@@ -465,7 +473,7 @@ async function onMonthChange() {
   // Cuba load data bulan yang dipilih dulu
   setLoading(true);
   try {
-    const res = await fetch(`${url}?action=load&bulan=${b}&tahun=${t}`);
+    const res = await fetchNoCache(`${url}?action=load&bulan=${b}&tahun=${t}`);
     const data = await res.json();
     if (data.success) {
       // Flag (accumulate/yuranLink/newItem) kini datang terus dari Sheets
@@ -516,7 +524,7 @@ async function onMonthChange() {
 
 async function fetchPrevBaki(url, bulan, tahun) {
   try {
-    const res = await fetch(`${url}?action=getBaki&bulan=${bulan}&tahun=${tahun}`);
+    const res = await fetchNoCache(`${url}?action=getBaki&bulan=${bulan}&tahun=${tahun}`);
     const data = await res.json();
     if (data.success) return parseFloat(data.baki) || 0;
   } catch(e) {}
@@ -687,7 +695,7 @@ async function openAnnualSummary() {
   document.getElementById('annual-modal').classList.add('show');
 
   try {
-    const res = await fetch(`${url}?action=getAnnualSummary&tahun=${tahun}`);
+    const res = await fetchNoCache(`${url}?action=getAnnualSummary&tahun=${tahun}`);
     const data = await res.json();
     if (data.success) {
       renderAnnualSummary(data, tahun);
@@ -949,7 +957,7 @@ async function fetchYuran(idx) {
   const btn = document.getElementById('yuran-fetch-btn');
   if (btn) { btn.textContent = '…'; btn.disabled = true; }
   try {
-    const res = await fetch(url + '?action=getKutipanYuran&bulan=' + bulan + '&tahun=' + tahun);
+    const res = await fetchNoCache(url + '?action=getKutipanYuran&bulan=' + bulan + '&tahun=' + tahun);
     const data = await res.json();
     if (data.success) {
       masuk[idx].amt = data.yuran.toFixed(2);
@@ -998,7 +1006,7 @@ async function loadFromSheet() {
   const tahun = document.getElementById('tahun').value;
   setLoading(true);
   try {
-    const res = await fetch(`${url}?action=load&bulan=${bulan}&tahun=${tahun}`);
+    const res = await fetchNoCache(`${url}?action=load&bulan=${bulan}&tahun=${tahun}`);
     const data = await res.json();
     if (data.success) {
       if (data.masuk && data.masuk.length) masuk = data.masuk;
@@ -1118,7 +1126,7 @@ async function autoLoadOnOpen() {
   const tahun = document.getElementById('tahun').value;
   setLoading(true);
   try {
-    const res = await fetch(`${url}?action=load&bulan=${bulan}&tahun=${tahun}`);
+    const res = await fetchNoCache(`${url}?action=load&bulan=${bulan}&tahun=${tahun}`);
     const data = await res.json();
     if (data.success) {
       // Flag (accumulate/yuranLink/newItem) kini datang terus dari Sheets
