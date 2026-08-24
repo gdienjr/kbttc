@@ -224,7 +224,6 @@
     <p id="header-sub">Penyata Kewangan Bulanan</p>
   </div>
 </div>
-</div>
 
 <div id="loading"><div class="loading-box"><div class="spinner"></div>Sedang memproses...</div></div>
 <div id="toast"></div>
@@ -939,20 +938,24 @@ document.getElementById('add-popup').addEventListener('click', function(e) {
 });
 
 // Fetch yuran dari kbttc-yuran
+// DIPERBETULKAN: kini hantar 'tahun' sekali, supaya backend boleh tapis
+// ikut bulan DAN tahun sebenar transaksi diterima (bukan cuma nama bulan
+// je, yang boleh bercampur antara tahun berlainan).
 async function fetchYuran(idx) {
   const url = getUrl();
   if (!url) { showToast('Sila masukkan URL Apps Script dahulu'); return; }
   const bulan = document.getElementById('bulan').value;
+  const tahun = document.getElementById('tahun').value;
   const btn = document.getElementById('yuran-fetch-btn');
   if (btn) { btn.textContent = '…'; btn.disabled = true; }
   try {
-    const res = await fetch(url + '?action=getKutipanYuran&bulan=' + bulan);
+    const res = await fetch(url + '?action=getKutipanYuran&bulan=' + bulan + '&tahun=' + tahun);
     const data = await res.json();
     if (data.success) {
       masuk[idx].amt = data.yuran.toFixed(2);
       renderList('masuk', masuk);
       updateTotals();
-      showToast('✓ Kutipan yuran ' + bulan + ': RM ' + data.yuran.toFixed(2));
+      showToast('✓ Kutipan yuran ' + bulan + ' ' + tahun + ': RM ' + data.yuran.toFixed(2));
     } else {
       showToast('Ralat: ' + (data.error || 'Cuba semula'));
       if (btn) { btn.textContent = '⟳'; btn.disabled = false; }
