@@ -446,6 +446,19 @@
             try {
                 let res = await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
                 let hasil = await res.json();
+
+                // Bulan yang dipilih dah pun dibayar - tanya admin dulu
+                // sama ada nak salurkan bayaran ni ke bulan hadapan, atau
+                // simpan je sebagai lebihan (tak sentuh mana-mana bulan).
+                if (hasil.status === "confirm") {
+                    const mahuKehadapan = confirm(
+                        hasil.message + "\n\nOK = Bayar ke bulan HADAPAN\nBatal = Simpan sebagai LEBIHAN sahaja"
+                    );
+                    let payload2 = Object.assign({}, payload, { bayarKehadapan: mahuKehadapan });
+                    let res2 = await fetch(API_URL, { method: "POST", body: JSON.stringify(payload2) });
+                    hasil = await res2.json();
+                }
+
                 toggleLoading(false);
                 if (hasil.status === "success") {
                     tunjukMesej(hasil.message, "success");
