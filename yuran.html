@@ -232,12 +232,25 @@
         pendingList.forEach((pemohon) => {
             let div = document.createElement("div");
             div.className = "p-3 bg-white border border-slate-100 rounded-xl shadow-xs space-y-2";
-            
-            // Paparkan kotak nota ahli lama sekiranya ada
-            let notaHtml = pemohon.nota 
-                ? `<div class="mt-2 p-2 bg-amber-50/50 border border-amber-100 rounded-lg text-xs text-slate-600 leading-relaxed"><strong>Nota Ahli:</strong> ${pemohon.nota}</div>` 
+
+            // Bezakan ahli baru daftar online (tag [AHLI BARU] dalam nota) vs pra-daftar ahli lama biasa
+            let notaMentah = pemohon.nota || "";
+            let isAhliBaru = notaMentah.indexOf("[AHLI BARU]") === 0;
+            let notaBersih = isAhliBaru ? notaMentah.replace("[AHLI BARU]", "").trim() : notaMentah;
+
+            // Paparkan kotak nota sekiranya ada
+            let notaHtml = notaBersih
+                ? `<div class="mt-2 p-2 bg-amber-50/50 border border-amber-100 rounded-lg text-xs text-slate-600 leading-relaxed"><strong>Nota Ahli:</strong> ${notaBersih}</div>` 
                 : '';
-            
+
+            let amaranResitHtml = isAhliBaru
+                ? `<div class="mt-1 text-[10px] text-blue-600 font-semibold">⚠️ Sila semak resit RM10 di WhatsApp sebelum lulus.</div>`
+                : '';
+
+            let badgeHtml = isAhliBaru
+                ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 shrink-0">🆕 Ahli Baru (Online)</span>`
+                : `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 shrink-0">Menunggu</span>`;
+
             let phonePaparan = formatNoTelPaparan(pemohon.phone);
             
             div.innerHTML = `
@@ -246,9 +259,10 @@
                         <h4 class="text-sm font-bold text-slate-800 truncate">${pemohon.nama}</h4>
                         <p class="text-xs text-slate-500 font-mono">${phonePaparan}</p>
                         <p class="text-[10px] text-slate-400 mt-1">Diterima: ${pemohon.tarikh}</p>
+                        ${amaranResitHtml}
                         ${notaHtml}
                     </div>
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 shrink-0">Menunggu</span>
+                    ${badgeHtml}
                 </div>
                 <div class="flex gap-2 pt-1">
                     <button class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-1.5 px-3 rounded-lg text-xs transition duration-200" onclick="prosesPraDaftarSelesai('${pemohon.nama}', '${pemohon.phone}', 'lulus')">Lulus & WA</button>
