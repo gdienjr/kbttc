@@ -903,7 +903,7 @@ function closeAddPopup() {
   document.getElementById('add-popup').style.display = 'none';
   _popupType = null; _popupIdx = null;
 }
-function confirmAdd() {
+async function confirmAdd() {
   const val = parseFloat(document.getElementById('popup-input').value);
   if (!val || val <= 0) { showToast('Masukkan amaun yang sah'); return; }
   const type = _popupType, idx = _popupIdx;
@@ -914,8 +914,18 @@ function confirmAdd() {
   const label = arr[idx].label;
   renderList(type, arr);
   updateTotals();
-  showToast('✓ +RM ' + val.toFixed(2) + ' ditambah');
   closeAddPopup();
+
+  // Auto-simpan ke Google Sheets serta-merta supaya nilai + tak hilang
+  // kalau admin tutup/reload sebelum sempat tekan "Simpan ke Sheets".
+  setLoading(true);
+  try {
+    await saveToSheetSilent();
+    showToast('✓ +RM ' + val.toFixed(2) + ' ditambah & disimpan ke Sheets');
+  } catch(e) {
+    showToast('⚠ +RM ' + val.toFixed(2) + ' ditambah tapi GAGAL auto-simpan — sila tekan Simpan ke Sheets');
+  }
+  setLoading(false);
   logAddition(type, label, val, newTotal);
 }
 
@@ -975,26 +985,36 @@ async function fetchYuran(idx) {
 }
 
 // Google Sheets
-async function saveToSheet() {
+
+// Fungsi teras simpan — dikongsi oleh butang manual "Simpan ke Sheets"
+// DAN auto-save selepas butang + (accumulate) ditekan. Buang duplikasi
+// logik supaya kedua-dua laluan sentiasa simpan data yang sama.
+async function saveToSheetSilent() {
   const url = getUrl();
-  if (!url) { showToast('Sila masukkan URL Apps Script dahulu'); return; }
+  if (!url) throw new Error('URL Apps Script belum ditetapkan');
   const bulan = document.getElementById('bulan').value;
   const tahun = document.getElementById('tahun').value;
   const totalMasuk = sumArr(masuk);
   const totalKeluar = sumArr(keluar);
   const baki = totalMasuk - totalKeluar;
+  const res = await fetch(url, {
+    method: 'POST',
+    body: JSON.stringify({ action:'save', bulan, tahun, masuk, keluar, tangan, totalMasuk, totalKeluar, baki }),
+  });
+  const data = await res.json();
+  if (!data.success) throw new Error(data.error || 'Gagal simpan');
+  return data;
+}
+
+async function saveToSheet() {
+  if (!getUrl()) { showToast('Sila masukkan URL Apps Script dahulu'); return; }
   closePreview();
   setLoading(true);
   try {
-    const res = await fetch(url, {
-      method: 'POST',
-      body: JSON.stringify({ action:'save', bulan, tahun, masuk, keluar, tangan, totalMasuk, totalKeluar, baki }),
-    });
-    const data = await res.json();
-    if (data.success) showToast('✓ Disimpan ke sheet ' + data.sheetName);
-    else showToast('Ralat: ' + (data.error || 'Cuba semula'));
+    const data = await saveToSheetSilent();
+    showToast('✓ Disimpan ke sheet ' + data.sheetName);
   } catch(e) {
-    showToast('Gagal sambung. Semak URL & internet.');
+    showToast(e.message.includes('URL') ? e.message : 'Gagal sambung. Semak URL & internet.');
   }
   setLoading(false);
 }
