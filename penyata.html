@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1a7a4a">
+<title>Penyata Kewangan KBTTC</title>
+<style>
+  :root {
+    --green: #1a7a4a;
+    --green-light: #e8f5ee;
+    --green-mid: #2d9e63;
+    --red-light: #fdecea;
+    --red: #c0392b;
+    --gray-light: #f3f4f6;
+    --border: #e5e7eb;
+    --text: #111827;
+    --text-muted: #6b7280;
+    --white: #ffffff;
+    --radius: 10px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f2f5; color: var(--text); min-height: 100vh; }
+  button, select { font-family: inherit; }
+
+  /* Header */
+  .app-header { background: var(--green); color: white; padding: 18px 20px 14px; text-align: center; }
+  .header-logo { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 3px; }
+  .header-logo img { width: 50px; height: 50px; object-fit: contain; border-radius: 8px; }
+  .header-logo h1 { font-size: 22px; font-weight: 700; letter-spacing: 0.02em; }
+  .header-sub { font-size: 12px; opacity: 0.75; }
+
+  .container { max-width: 480px; margin: 0 auto; padding: 16px 14px 40px; }
+
+  /* Month selector */
+  .month-card { background: var(--white); border-radius: var(--radius); border: 1px solid var(--border); padding: 12px 16px; margin-bottom: 12px; display: flex; gap: 10px; align-items: center; box-shadow: var(--shadow); }
+  .month-card select { flex: 1; font-size: 14px; font-weight: 500; border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; background: var(--white); color: var(--text); cursor: pointer; outline: none; }
+  .month-card select:focus { border-color: var(--green); }
+  .icon-btn { width: 38px; height: 38px; border-radius: 8px; border: 1px solid var(--border); background: var(--gray-light); color: var(--text-muted); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .icon-btn:hover { background: var(--green-light); color: var(--green); border-color: var(--green); }
+
+  .annual-btn { width: 100%; background: linear-gradient(135deg, var(--green), var(--green-mid)); color: white; border: none; border-radius: var(--radius); padding: 12px 16px; font-size: 13px; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 12px; cursor: pointer; box-shadow: var(--shadow); }
+
+  /* Cards */
+  .card { background: var(--white); border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 12px; overflow: hidden; box-shadow: var(--shadow); }
+  .card-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--gray-light); }
+  .card-header-left { display: flex; align-items: center; gap: 8px; }
+  .card-icon { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  .icon-green { background: var(--green-light); color: var(--green); }
+  .icon-red { background: var(--red-light); color: var(--red); }
+  .icon-blue { background: #eff6ff; color: #2563eb; }
+  .card-title { font-size: 13px; font-weight: 600; }
+  .card-body { padding: 4px 16px 8px; }
+
+  /* Rows (view only) */
+  .row { display: flex; gap: 8px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .row:last-child { border-bottom: none; }
+  .row-num { font-size: 12px; color: var(--text-muted); width: 18px; text-align: center; flex-shrink: 0; }
+  .row-label { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  .row-amt { flex-shrink: 0; font-weight: 500; font-variant-numeric: tabular-nums; text-align: right; }
+  .empty { padding: 14px 0; text-align: center; font-size: 12px; color: var(--text-muted); }
+
+  /* Baki */
+  .baki-total { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: var(--green); color: white; border-radius: var(--radius); margin-bottom: 12px; box-shadow: var(--shadow); }
+  .baki-total .label { font-size: 13px; opacity: 0.85; }
+  .baki-total .sub { font-size: 11px; opacity: 0.7; margin-top: 2px; }
+  .baki-total .amount { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+  .baki-total .amount.neg { color: #fca5a5; }
+
+  .note { text-align: center; font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+  /* Empty / error state */
+  .state-box { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 36px 20px; text-align: center; box-shadow: var(--shadow); margin-bottom: 12px; }
+  .state-box .big { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+  .state-box .small { font-size: 12px; color: var(--text-muted); }
+
+  /* Loading */
+  #loading { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 998; justify-content: center; align-items: center; }
+  #loading.show { display: flex; }
+  .loading-box { background: white; border-radius: 14px; padding: 24px 32px; text-align: center; font-size: 14px; }
+  .spinner { width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--green); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 10px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 2s; } }
+
+  /* Annual Summary */
+  #annual-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 996; overflow-y: auto; }
+  #annual-modal.show { display: block; }
+  .annual-card { background: var(--white); max-width: 480px; margin: 0 auto; min-height: 100vh; }
+  .annual-header { background: var(--green); color: white; padding: 16px 18px; position: sticky; top: 0; z-index: 5; display: flex; justify-content: space-between; align-items: center; }
+  .annual-header h2 { font-size: 15px; font-weight: 600; }
+  .modal-close { background: rgba(255,255,255,0.2); border: none; color: white; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; }
+  .annual-body { padding: 16px; }
+  .annual-summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .summary-box { background: var(--gray-light); border-radius: 10px; padding: 12px; }
+  .summary-box .lbl { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
+  .summary-box .val { font-size: 17px; font-weight: 700; }
+  .summary-box.full { grid-column: 1 / -1; background: var(--green-light); }
+  .summary-box.full .val { color: var(--green); font-size: 20px; }
+  .annual-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 16px; }
+  .annual-table th { background: var(--gray-light); padding: 7px 8px; text-align: left; font-weight: 600; font-size: 11px; text-transform: uppercase; color: var(--text-muted); border-bottom: 2px solid var(--border); }
+  .annual-table th.right, .annual-table td.right { text-align: right; }
+  .annual-table td { padding: 6px 8px; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; }
+  .annual-table tr.no-data td { color: #d1d5db; }
+  .annual-table tr.total-row td { font-weight: 700; background: var(--gray-light); border-top: 2px solid var(--border); }
+  .annual-table tr.total-row td.baki-pos { color: var(--green); }
+  .annual-table tr.total-row td.baki-neg { color: var(--red); }
+  .chart-section { margin-bottom: 16px; }
+  .chart-title { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px; }
+  .cat-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 12px; }
+  .cat-label { width: 110px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cat-bar-track { flex: 1; height: 16px; background: var(--gray-light); border-radius: 4px; overflow: hidden; }
+  .cat-bar-fill { height: 100%; border-radius: 4px; }
+  .cat-val { width: 70px; text-align: right; flex-shrink: 0; font-variant-numeric: tabular-nums; color: var(--text-muted); }
+
+  .print-header { display: none; }
+  @media print {
+    .print-header { display: flex !important; align-items: center; gap: 14px; padding-bottom: 14px; margin-bottom: 14px; border-bottom: 3px solid var(--green); }
+    .print-header img { width: 56px; height: 56px; object-fit: contain; }
+    .print-header-title { font-size: 20px; font-weight: 700; }
+    .print-header-sub { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+    body * { visibility: hidden; }
+    #annual-modal, #annual-modal * { visibility: visible; }
+    #annual-modal { position: absolute; inset: 0; background: white !important; display: block !important; overflow: visible; }
+    .annual-card { max-width: 100%; min-height: auto; }
+    .annual-header { position: static; background: white !important; color: var(--text) !important; border-bottom: 2px solid var(--green); padding: 0 0 12px; }
+    .annual-header h2 { color: var(--text) !important; font-size: 18px; }
+    .annual-header button { display: none !important; }
+    .annual-body { padding: 16px 0; }
+    .summary-box, .cat-bar-track, .annual-table th, .annual-table tr.total-row td, .annual-table tr.no-data td { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .chart-section, .annual-table, .annual-summary-grid { break-inside: avoid; }
+    @page { margin: 1.5cm; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="header-logo">
+    <img src="icon-192.png" alt="Logo KBTTC" onerror="this.style.display='none'">
+    <h1>KBTTC</h1>
+  </div>
+  <div class="header-sub">Penyata Kewangan &bull; Paparan AJK</div>
+</div>
+
+<div id="loading"><div class="loading-box"><div class="spinner"></div>Memuatkan penyata...</div></div>
+
+<div class="container">
+  <div class="month-card">
+    <select id="bulan" onchange="muatPenyata()" aria-label="Bulan">
+      <option>JAN</option><option>FEB</option><option>MAC</option><option>APR</option>
+      <option>MEI</option><option>JUN</option><option>JUL</option><option>OGOS</option>
+      <option>SEP</option><option>OKT</option><option>NOV</option><option>DIS</option>
+    </select>
+    <select id="tahun" onchange="muatPenyata()" aria-label="Tahun">
+      <option>2025</option><option>2026</option><option>2027</option><option>2028</option>
+    </select>
+    <button class="icon-btn" onclick="muatPenyata()" title="Muat semula" aria-label="Muat semula">&#8635;</button>
+  </div>
+
+  <button class="annual-btn" onclick="openAnnualSummary()">📊 Ringkasan Tahunan</button>
+
+  <div id="penyata-content"></div>
+  <p class="note">Paparan sahaja. Data ikut rekod terakhir yang disimpan oleh admin.</p>
+</div>
+
+<!-- Annual Summary Modal -->
+<div id="annual-modal">
+  <div class="annual-card">
+    <div class="print-header">
+      <img src="icon-192.png" alt="" onerror="this.style.display='none'">
+      <div>
+        <div class="print-header-title">Penyata Kewangan KBTTC</div>
+        <div class="print-header-sub" id="print-header-sub">Ringkasan Tahunan</div>
+      </div>
+    </div>
+    <div class="annual-header">
+      <h2 id="annual-title">Ringkasan Tahunan</h2>
+      <div style="display:flex; gap:8px;">
+        <button class="modal-close" onclick="window.print()" title="Cetak / Simpan PDF" style="width:auto; padding:0 10px; font-size:13px; gap:5px;">🖨 PDF</button>
+        <button class="modal-close" onclick="closeAnnualSummary()" aria-label="Tutup">✕</button>
+      </div>
+    </div>
+    <div class="annual-body" id="annual-body"></div>
+  </div>
+</div>
+
+<script>
+// URL backend Kewangan (sama dengan kewangan.html). Hanya guna GET: load & getAnnualSummary.
+const API_URL = 'https://script.google.com/macros/s/AKfycbw0KMsPGj9Zym1n7x_KPAhvLiE5aLHtYDybSiTbbxWz3Fb0bm4z1dWlrIk7ZuCLPW-x/exec';
+
+function fmt(n) { return 'RM ' + parseFloat(n || 0).toFixed(2); }
+function fmtN(n) { return parseFloat(n || 0).toFixed(2); }
+function escHtml(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function sumArr(arr) { return arr.reduce((s, x) => s + (parseFloat(x.amt) || 0), 0); }
+
+// Elak cache lama (terutama Safari iOS)
+function fetchNoCache(url) {
+  const sep = url.includes('?') ? '&' : '?';
+  return fetch(url + sep + '_t=' + Date.now(), { cache: 'no-store' });
+}
+
+function setLoading(s) { document.getElementById('loading').className = s ? 'show' : ''; }
+
+function stateBox(big, small) {
+  return `<div class="state-box"><div class="big">${escHtml(big)}</div><div class="small">${escHtml(small)}</div></div>`;
+}
+
+function renderRows(arr) {
+  const items = arr.filter(x => (x.label || '').toString().trim() !== '');
+  if (!items.length) return '<div class="empty">Tiada rekod.</div>';
+  return items.map((x, i) => {
+    const hasAmt = x.amt !== '' && x.amt !== null && x.amt !== undefined;
+    return `<div class="row">
+      <span class="row-num">${i + 1}</span>
+      <span class="row-label">${escHtml(x.label)}</span>
+      <span class="row-amt">${hasAmt ? fmtN(x.amt) : '-'}</span>
+    </div>`;
+  }).join('');
+}
+
+async function muatPenyata() {
+  const bulan = document.getElementById('bulan').value;
+  const tahun = document.getElementById('tahun').value;
+  const box = document.getElementById('penyata-content');
+  setLoading(true);
+  try {
+    const res = await fetchNoCache(`${API_URL}?action=load&bulan=${bulan}&tahun=${tahun}`);
+    const data = await res.json();
+    if (!data.success) {
+      box.innerHTML = stateBox('Belum ada penyata', `Penyata ${bulan} ${tahun} belum disimpan oleh admin.`);
+    } else {
+      const masuk = data.masuk || [];
+      const keluar = data.keluar || [];
+      const tangan = (data.tangan || []).filter(t => (t.nama || '') !== '' || (t.amt !== '' && t.amt != null));
+      const tm = sumArr(masuk), tk = sumArr(keluar), baki = tm - tk;
+      const tt = sumArr(tangan);
+
+      box.innerHTML = `
+        <div class="baki-total">
+          <div>
+            <div class="label">Baki Semasa</div>
+            <div class="sub">${bulan} ${tahun}</div>
+          </div>
+          <div class="amount${baki < 0 ? ' neg' : ''}">${fmt(baki)}</div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-header-left"><div class="card-icon icon-green">↓</div><span class="card-title">Kemasukan</span></div>
+            <span style="font-size:13px;font-weight:600;color:var(--green);">${fmt(tm)}</span>
+          </div>
+          <div class="card-body">${renderRows(masuk)}</div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-header-left"><div class="card-icon icon-red">↑</div><span class="card-title">Keluaran</span></div>
+            <span style="font-size:13px;font-weight:600;color:var(--red);">${fmt(tk)}</span>
+          </div>
+          <div class="card-body">${renderRows(keluar)}</div>
+        </div>
+
+        ${tangan.length ? `
+        <div class="card">
+          <div class="card-header">
+            <div class="card-header-left"><div class="card-icon icon-blue">👤</div><span class="card-title">Di Tangan</span></div>
+            <span style="font-size:12px;color:var(--text-muted);">${fmt(tt)}</span>
+          </div>
+          <div class="card-body">
+            ${tangan.map(t => `<div class="row">
+              <span class="row-num">*</span>
+              <span class="row-label">${escHtml(t.nama)}</span>
+              <span class="row-amt">${fmtN(t.amt)}</span>
+            </div>`).join('')}
+          </div>
+        </div>` : ''}
+      `;
+    }
+  } catch (e) {
+    box.innerHTML = stateBox('Gagal memuatkan penyata', 'Semak sambungan internet, kemudian tekan butang muat semula.');
+  }
+  setLoading(false);
+}
+
+// ---------- Ringkasan Tahunan ----------
+async function openAnnualSummary() {
+  const tahun = document.getElementById('tahun').value;
+  document.getElementById('annual-title').textContent = 'Ringkasan Tahunan ' + tahun;
+  document.getElementById('print-header-sub').textContent = 'Ringkasan Tahunan ' + tahun;
+  document.getElementById('annual-body').innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text-muted);font-size:13px;">Memuatkan data...</div>';
+  document.getElementById('annual-modal').classList.add('show');
+  try {
+    const res = await fetchNoCache(`${API_URL}?action=getAnnualSummary&tahun=${tahun}`);
+    const data = await res.json();
+    if (data.success) renderAnnualSummary(data, tahun);
+    else document.getElementById('annual-body').innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--red);font-size:13px;">Ralat: ' + escHtml(data.error || 'Gagal muat data') + '</div>';
+  } catch (e) {
+    document.getElementById('annual-body').innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--red);font-size:13px;">Gagal sambung. Semak internet.</div>';
+  }
+}
+
+function closeAnnualSummary() { document.getElementById('annual-modal').classList.remove('show'); }
+document.getElementById('annual-modal').addEventListener('click', function (e) { if (e.target === this) closeAnnualSummary(); });
+
+function renderAnnualSummary(data, tahun) {
+  const months = data.months;
+  const totalMasuk = months.reduce((s, m) => s + m.totalMasuk, 0);
+  const totalKeluar = months.reduce((s, m) => s + m.totalKeluar, 0);
+  // Pendapatan sebenar: tolak "baki dari bulan lepas"
+  const pendapatanSebenar = Object.entries(data.kategoriMasuk)
+    .filter(([k]) => !k.toLowerCase().includes('baki'))
+    .reduce((s, [, v]) => s + v, 0);
+  const adaData = months.filter(m => m.ada);
+  const bakiAkhir = adaData.length ? adaData[adaData.length - 1].baki : 0;
+
+  let rows = '';
+  months.forEach(m => {
+    if (!m.ada) {
+      rows += `<tr class="no-data"><td>${m.bulan}</td><td class="right">-</td><td class="right">-</td><td class="right">-</td></tr>`;
+    } else {
+      rows += `<tr>
+        <td>${m.bulan}</td>
+        <td class="right" style="color:var(--green);">${fmtN(m.totalMasuk)}</td>
+        <td class="right" style="color:var(--red);">${fmtN(m.totalKeluar)}</td>
+        <td class="right" style="font-weight:600;">${fmtN(m.baki)}</td>
+      </tr>`;
+    }
+  });
+  rows += `<tr class="total-row">
+    <td>Jumlah</td>
+    <td class="right">${fmtN(totalMasuk)}</td>
+    <td class="right">${fmtN(totalKeluar)}</td>
+    <td class="right ${bakiAkhir >= 0 ? 'baki-pos' : 'baki-neg'}">${fmtN(bakiAkhir)}</td>
+  </tr>`;
+
+  const filteredMasuk = Object.fromEntries(Object.entries(data.kategoriMasuk).filter(([k]) => !k.toLowerCase().includes('baki')));
+
+  document.getElementById('annual-body').innerHTML = `
+    <div class="annual-summary-grid">
+      <div class="summary-box"><div class="lbl">Pendapatan Sebenar</div><div class="val" style="color:var(--green);">RM ${fmtN(pendapatanSebenar)}</div></div>
+      <div class="summary-box"><div class="lbl">Jumlah Keluaran</div><div class="val" style="color:var(--red);">RM ${fmtN(totalKeluar)}</div></div>
+      <div class="summary-box full"><div class="lbl">Baki Akhir Tahun ${escHtml(tahun)}</div><div class="val">RM ${fmtN(bakiAkhir)}</div></div>
+    </div>
+    <div class="chart-section"><div class="chart-title">Trend Baki Bulanan</div>${buildBakiChart(months)}</div>
+    <div class="chart-section"><div class="chart-title">Pecahan Kemasukan (Setahun)</div>${buildCategoryBars(filteredMasuk, 'var(--green)')}</div>
+    <div class="chart-section"><div class="chart-title">Pecahan Keluaran (Setahun)</div>${buildCategoryBars(data.kategoriKeluar, 'var(--red)')}</div>
+    <div class="chart-title" style="margin-bottom:8px;">Butiran Bulanan</div>
+    <table class="annual-table">
+      <thead><tr><th>Bulan</th><th class="right">Masuk</th><th class="right">Keluar</th><th class="right">Baki</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
+
+function buildBakiChart(months) {
+  const w = 400, h = 160, padL = 50, padB = 24, padT = 12, padR = 12;
+  const chartW = w - padL - padR, chartH = h - padT - padB;
+  const validVals = months.filter(m => m.ada).map(m => m.baki);
+  if (!validVals.length) return '<div style="font-size:12px;color:var(--text-muted);">Tiada data untuk dipaparkan.</div>';
+
+  const minV = Math.min(0, ...validVals);
+  let maxV = Math.max(...validVals);
+  if (maxV === minV) maxV = minV + 100;
+  const range = maxV - minV;
+  const xStep = chartW / 11;
+
+  const points = months.map((m, i) => {
+    if (!m.ada) return null;
+    return { x: padL + i * xStep, y: padT + chartH - ((m.baki - minV) / range) * chartH };
+  });
+
+  const segs = [];
+  let cur = '';
+  points.forEach(pt => {
+    if (pt === null) { if (cur) segs.push(cur); cur = ''; }
+    else cur += (cur ? ' L ' : 'M ') + pt.x.toFixed(1) + ' ' + pt.y.toFixed(1);
+  });
+  if (cur) segs.push(cur);
+
+  const zeroY = padT + chartH - ((0 - minV) / range) * chartH;
+  let svg = `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:auto;" xmlns="http://www.w3.org/2000/svg">`;
+  if (minV < 0 && maxV > 0) svg += `<line x1="${padL}" y1="${zeroY.toFixed(1)}" x2="${w - padR}" y2="${zeroY.toFixed(1)}" stroke="#d1d5db" stroke-width="1" stroke-dasharray="2,2"/>`;
+  segs.forEach(s => { svg += `<path d="${s}" fill="none" stroke="#1a7a4a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`; });
+  points.forEach(pt => { if (pt) svg += `<circle cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="3" fill="#1a7a4a"/>`; });
+  const ms = ['J','F','M','A','M','J','J','O','S','O','N','D'];
+  ms.forEach((l, i) => { svg += `<text x="${(padL + i * xStep).toFixed(1)}" y="${h - 6}" font-size="9" fill="#9ca3af" text-anchor="middle">${l}</text>`; });
+  svg += `<text x="${padL - 6}" y="${(padT + 4).toFixed(1)}" font-size="9" fill="#9ca3af" text-anchor="end">${fmtN(maxV)}</text>`;
+  svg += `<text x="${padL - 6}" y="${(padT + chartH).toFixed(1)}" font-size="9" fill="#9ca3af" text-anchor="end">${fmtN(minV)}</text>`;
+  return svg + '</svg>';
+}
+
+function buildCategoryBars(catObj, color) {
+  const entries = Object.entries(catObj).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
+  if (!entries.length) return '<div style="font-size:12px;color:var(--text-muted);">Tiada data.</div>';
+  const max = entries[0][1];
+  return entries.map(([label, val]) => {
+    const pct = Math.max(4, (val / max) * 100);
+    return `<div class="cat-row">
+      <div class="cat-label" title="${escHtml(label)}">${escHtml(label)}</div>
+      <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${pct}%;background:${color};"></div></div>
+      <div class="cat-val">${fmtN(val)}</div>
+    </div>`;
+  }).join('');
+}
+
+// Init: bulan & tahun semasa ikut tarikh peranti
+(function init() {
+  const months = ['JAN','FEB','MAC','APR','MEI','JUN','JUL','OGOS','SEP','OKT','NOV','DIS'];
+  const now = new Date();
+  const tahunSel = document.getElementById('tahun');
+  const tahun = String(now.getFullYear());
+  if (!Array.from(tahunSel.options).some(o => o.value === tahun)) {
+    const opt = document.createElement('option');
+    opt.value = tahun; opt.textContent = tahun;
+    tahunSel.appendChild(opt);
+  }
+  tahunSel.value = tahun;
+  document.getElementById('bulan').value = months[now.getMonth()];
+  muatPenyata();
+})();
+</script>
+</body>
+</html>
