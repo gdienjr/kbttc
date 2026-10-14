@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KBTTC - Admin Tempahan Dewan</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } } }
+    </script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased">
+
+    <div class="max-w-md w-full mx-auto px-4 py-6 flex-grow flex flex-col gap-5">
+        <header class="text-center py-2 flex flex-col items-center">
+            <img src="icon-192.png" alt="KBTTC Logo" class="h-24 object-contain mb-2 drop-shadow-lg" onerror="this.onerror=null; this.src='https://placehold.co/192x192/000000/ffffff?text=KBTTC'">
+            <h1 class="text-2xl font-bold text-slate-900">Admin Tempahan Dewan</h1>
+            <p class="text-sm text-slate-500 mt-1">Kelulusan & Pengurusan Tempahan</p>
+        </header>
+
+        <!-- Skrin PIN -->
+        <section id="seksyenPin" class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+            <h3 class="text-base font-bold text-slate-900 mb-1">Masukkan PIN Admin</h3>
+            <p class="text-xs text-slate-500 mb-4">PIN diperlukan untuk melihat dan mengurus tempahan.</p>
+            <form id="formPin" class="space-y-3">
+                <input type="password" id="pinInput" inputmode="numeric" autocomplete="off"
+                    class="w-full px-3 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent text-center text-lg tracking-[0.3em] bg-white"
+                    placeholder="••••">
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-xl transition duration-200 text-sm shadow-md active:scale-[0.98]">
+                    Masuk
+                </button>
+            </form>
+        </section>
+
+        <!-- Kandungan admin (selepas PIN sah) -->
+        <div id="kandunganAdmin" class="hidden flex flex-col gap-5">
+            <div class="flex items-center justify-between">
+                <div class="flex gap-1.5 bg-slate-100 rounded-xl p-1">
+                    <button id="tabMenunggu" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold">Menunggu</button>
+                    <button id="tabSemua" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold">Semua</button>
+                </div>
+                <button id="btnMuat" class="text-xs font-semibold text-blue-600">↻ Muat semula</button>
+            </div>
+
+            <div id="senarai" class="space-y-3">
+                <div class="py-10 text-center text-xs text-slate-400">Memuatkan senarai...</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toastContainer" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 w-full max-w-xs px-4"></div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-slate-950/40 backdrop-blur-[2px] hidden items-center justify-center z-50">
+        <div class="bg-white p-5 rounded-2xl shadow-xl flex flex-col items-center gap-3">
+            <svg class="animate-spin h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+        </div>
+    </div>
+
+    <style>
+        .tab-btn { color: #64748b; }
+        .tab-btn.active { background: white; color: #2563eb; box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+    </style>
+
+    <script>
+    // GANTI dengan URL deployment "KBTTC Tempahan Backend" (/exec) — SAMA URL
+    // seperti dalam tempah.html dan jadual.html.
+    const API_URL = "https://script.google.com/macros/s/AKfycbyfP5VbZqjpijdC8FTgmmE6GFqNo-nwSlxgRBNVEA0p09CXpQdGck1CIiHTcJqSo3gIxA/exec";
+    const PIN_STORAGE_KEY = "kbttc_tempahan_admin_pin";
+
+    const HARI = ["Ahad", "Isnin", "Selasa", "Rabu", "Khamis", "Jumaat", "Sabtu"];
+    const BULAN = ["Jan", "Feb", "Mac", "Apr", "Mei", "Jun", "Jul", "Ogos", "Sep", "Okt", "Nov", "Dis"];
+
+    let pin = "";
+    let semuaTempahan = [];
+    let tabAktif = "menunggu";
+
+    function pad(n) { return (n < 10 ? "0" : "") + n; }
+    function jam(h) { return pad(h) + ":00"; }
+    function escHtml(s) { return String(s || "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;"); }
+    function tarikhMs(iso) {
+        const p = String(iso || "").split("-");
+        if (p.length !== 3) return iso || "";
+        const d = new Date(+p[0], +p[1] - 1, +p[2]);
+        return HARI[d.getDay()] + ", " + d.getDate() + " " + BULAN[d.getMonth()] + " " + d.getFullYear();
+    }
+
+    function tunjukMesej(mesej, status = "info") {
+        const container = document.getElementById("toastContainer");
+        const toast = document.createElement("div");
+        let bgClass = "bg-slate-900 text-white";
+        if (status === "success") bgClass = "bg-blue-600 text-white";
+        if (status === "error") bgClass = "bg-rose-600 text-white";
+        toast.className = `${bgClass} px-4 py-3 rounded-xl shadow-lg text-sm font-medium transition-all duration-300 opacity-0 translate-y-2 flex items-center justify-between gap-3`;
+        toast.innerHTML = `<span>${escHtml(mesej)}</span><button class="text-white/60 hover:text-white" onclick="this.parentElement.remove()" aria-label="Tutup">✕</button>`;
+        container.appendChild(toast);
+        setTimeout(() => toast.classList.remove("opacity-0", "translate-y-2"), 10);
+        setTimeout(() => { toast.classList.add("opacity-0", "translate-y-2"); setTimeout(() => toast.remove(), 300); }, 4000);
+    }
+
+    function toggleLoading(show) {
+        const overlay = document.getElementById("loadingOverlay");
+        overlay.classList.toggle("hidden", !show);
+        overlay.classList.toggle("flex", show);
+    }
+
+    function dapatkanUcapanWaktu() {
+        const jamSekarang = new Date().getHours();
+        if (jamSekarang >= 5 && jamSekarang < 12) return "Selamat pagi";
+        if (jamSekarang >= 12 && jamSekarang < 14) return "Selamat tengah hari";
+        if (jamSekarang >= 14 && jamSekarang < 19) return "Selamat petang";
+        return "Selamat malam";
+    }
+
+    function formatNoTelWhatsApp(phone) {
+        let clean = String(phone || "").replace(/[^0-9]/g, "");
+        if (clean.startsWith("0")) clean = "6" + clean;
+        else if (!clean.startsWith("60") && clean.startsWith("1")) clean = "60" + clean;
+        return clean;
+    }
+
+    // ---------- PIN ----------
+    document.getElementById("formPin").onsubmit = async function (e) {
+        e.preventDefault();
+        const cubaPin = document.getElementById("pinInput").value.trim();
+        if (!cubaPin) return;
+        toggleLoading(true);
+        try {
+            const res = await fetch(API_URL, {
+                method: "POST",
+                body: JSON.stringify({ action: "getSenaraiTempahan", pin: cubaPin })
+            });
+            const data = await res.json();
+            toggleLoading(false);
+            if (data.status === "success") {
+                pin = cubaPin;
+                sessionStorage.setItem(PIN_STORAGE_KEY, pin);
+                semuaTempahan = data.data;
+                bukaAdmin();
+                lukisSenarai();
+            } else {
+                tunjukMesej(data.message || "PIN tidak sah.", "error");
+            }
+        } catch (err) {
+            toggleLoading(false);
+            tunjukMesej("Ralat sambungan.", "error");
+        }
+    };
+
+    function bukaAdmin() {
+        document.getElementById("seksyenPin").classList.add("hidden");
+        document.getElementById("kandunganAdmin").classList.remove("hidden");
+    }
+
+    async function muatSenarai() {
+        toggleLoading(true);
+        try {
+            const res = await fetch(API_URL, {
+                method: "POST",
+                body: JSON.stringify({ action: "getSenaraiTempahan", pin: pin })
+            });
+            const data = await res.json();
+            toggleLoading(false);
+            if (data.status === "success") {
+                semuaTempahan = data.data;
+                lukisSenarai();
+            } else {
+                tunjukMesej(data.message || "Gagal memuat senarai.", "error");
+                if ((data.message || "").indexOf("PIN") !== -1) {
+                    sessionStorage.removeItem(PIN_STORAGE_KEY);
+                    location.reload();
+                }
+            }
+        } catch (err) {
+            toggleLoading(false);
+            tunjukMesej("Ralat sambungan.", "error");
+        }
+    }
+
+    document.getElementById("btnMuat").onclick = muatSenarai;
+    document.getElementById("tabMenunggu").onclick = () => { tabAktif = "menunggu"; lukisSenarai(); };
+    document.getElementById("tabSemua").onclick = () => { tabAktif = "semua"; lukisSenarai(); };
+
+    function lukisSenarai() {
+        document.getElementById("tabMenunggu").classList.toggle("active", tabAktif === "menunggu");
+        document.getElementById("tabSemua").classList.toggle("active", tabAktif === "semua");
+
+        const box = document.getElementById("senarai");
+        let senarai = semuaTempahan;
+        if (tabAktif === "menunggu") senarai = senarai.filter(t => t.status === "Menunggu");
+
+        if (senarai.length === 0) {
+            box.innerHTML = `<div class="py-10 text-center text-xs text-slate-400">${tabAktif === "menunggu" ? "Tiada tempahan menunggu kelulusan." : "Tiada rekod tempahan."}</div>`;
+            return;
+        }
+
+        box.innerHTML = senarai.map(kadTempahan).join("");
+    }
+
+    function badgeStatus(status) {
+        const gaya = {
+            "Menunggu": "bg-amber-50 text-amber-700 border-amber-200",
+            "Sah": "bg-emerald-50 text-emerald-700 border-emerald-200",
+            "Ditolak": "bg-rose-50 text-rose-700 border-rose-200",
+            "Dibatalkan": "bg-slate-50 text-slate-500 border-slate-200"
+        }[status] || "bg-slate-50 text-slate-600 border-slate-200";
+        return `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold border shrink-0 ${gaya}">${escHtml(status)}</span>`;
+    }
+
+    function kadTempahan(t) {
+        const masa = `${jam(t.jamMula)} – ${jam(t.jamMula + t.bilSlot)}`;
+        const tujuanHtml = t.tujuan
+            ? `<div class="mt-2 p-2 bg-slate-50 border border-slate-100 rounded-lg text-xs text-slate-600 leading-relaxed"><strong>Tujuan:</strong> ${escHtml(t.tujuan)}</div>`
+            : "";
+
+        let tindakan = "";
+        if (t.status === "Menunggu") {
+            tindakan = `
+                <div class="flex gap-2 pt-2">
+                    <button class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-1.5 px-3 rounded-lg text-xs transition duration-200" onclick="prosesTempahan('${t.id}','${escHtml(t.nama)}','${t.phone}','${t.tarikh}','${masa}','${t.jumlah}','Sah')">Lulus & WA</button>
+                    <button class="flex-1 bg-rose-600 hover:bg-rose-700 text-white font-semibold py-1.5 px-3 rounded-lg text-xs transition duration-200" onclick="prosesTempahan('${t.id}','${escHtml(t.nama)}','${t.phone}','${t.tarikh}','${masa}','${t.jumlah}','Ditolak')">Tolak & WA</button>
+                </div>`;
+        } else if (t.status === "Sah") {
+            tindakan = `
+                <div class="flex gap-2 pt-2">
+                    <button class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-1.5 px-3 rounded-lg text-xs transition duration-200" onclick="prosesTempahan('${t.id}','${escHtml(t.nama)}','${t.phone}','${t.tarikh}','${masa}','${t.jumlah}','Dibatalkan')">Batalkan & WA</button>
+                </div>`;
+        }
+
+        return `
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-1.5">
+                <div class="flex justify-between items-start gap-2">
+                    <div class="flex-1 min-w-0">
+                        <span class="text-[10px] font-bold text-slate-400 font-mono">${escHtml(t.id)}</span>
+                        <h4 class="text-sm font-bold text-slate-800 truncate">${escHtml(t.nama)}</h4>
+                        <p class="text-xs text-slate-500 font-mono">${escHtml(t.phone)}</p>
+                    </div>
+                    ${badgeStatus(t.status)}
+                </div>
+                <div class="text-xs text-slate-600">
+                    <div>${tarikhMs(t.tarikh)} &middot; ${masa}</div>
+                    <div class="font-semibold text-slate-800">RM${t.jumlah}</div>
+                </div>
+                ${tujuanHtml}
+                ${tindakan}
+            </div>`;
+    }
+
+    async function prosesTempahan(id, nama, phone, tarikh, masa, jumlah, statusBaru) {
+        toggleLoading(true);
+        try {
+            const res = await fetch(API_URL, {
+                method: "POST",
+                body: JSON.stringify({ action: "ubahStatus", id, statusBaru, pin })
+            });
+            const hasil = await res.json();
+            toggleLoading(false);
+
+            if (hasil.status === "success") {
+                tunjukMesej(hasil.message, "success");
+
+                const formattedPhone = formatNoTelWhatsApp(phone);
+                const ucapan = dapatkanUcapanWaktu();
+                let mesej = "";
+                if (statusBaru === "Sah") {
+                    mesej = `${ucapan} ${nama},\n\nTempahan dewan *Kedai Buluh Table Tennis Club (KBTTC)* anda telah *DISAHKAN*! 🏓\n\nID: ${id}\nTarikh: ${tarikhMs(tarikh)}\nMasa: ${masa}\nJumlah: RM${jumlah}\n\nTerima kasih!`;
+                } else if (statusBaru === "Ditolak") {
+                    mesej = `${ucapan} ${nama},\n\nTerima kasih atas tempahan anda di *Kedai Buluh Table Tennis Club (KBTTC)*.\n\nDukacita dimaklumkan tempahan (ID: ${id}) tidak dapat disahkan buat masa ini. Sila hubungi Admin untuk maklumat lanjut.`;
+                } else {
+                    mesej = `${ucapan} ${nama},\n\nDimaklumkan tempahan dewan KBTTC anda (ID: ${id}, ${tarikhMs(tarikh)}, ${masa}) telah *DIBATALKAN*. Sila hubungi Admin untuk maklumat lanjut.`;
+                }
+
+                const waUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(mesej)}`;
+                window.open(waUrl, "_blank");
+
+                muatSenarai();
+            } else {
+                tunjukMesej(hasil.message || "Gagal memproses tempahan.", "error");
+            }
+        } catch (err) {
+            toggleLoading(false);
+            tunjukMesej("Ralat sambungan rangkaian.", "error");
+        }
+    }
+
+    // ---------- Init: cuba PIN yang tersimpan dalam sesi ----------
+    (function init() {
+        const pinTersimpan = sessionStorage.getItem(PIN_STORAGE_KEY);
+        if (pinTersimpan) {
+            document.getElementById("pinInput").value = pinTersimpan;
+            document.getElementById("formPin").requestSubmit();
+        }
+    })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KBTTC - Tempah Dewan</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } } }
+    </script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased">
+
+    <div class="max-w-md w-full mx-auto px-4 py-6 flex-grow flex flex-col gap-5">
+        <header class="text-center py-2 flex flex-col items-center">
+            <img src="icon-192.png" alt="KBTTC Logo" class="h-24 object-contain mb-2 drop-shadow-lg" onerror="this.onerror=null; this.src='https://placehold.co/192x192/000000/ffffff?text=KBTTC'">
+            <h1 class="text-2xl font-bold text-slate-900">Tempah Dewan</h1>
+            <p class="text-sm text-slate-500 mt-1">Kedai Buluh Table Tennis Club</p>
+        </header>
+
+        <div id="kandungan" class="flex flex-col gap-5">
+            <!-- Langkah 1: tarikh -->
+            <section class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+                <h2 class="text-base font-bold text-slate-900">Pilih tarikh</h2>
+                <p id="infoHarga" class="text-xs text-slate-500 mt-0.5 mb-3">RM10 sejam. Waktu 8:00 pagi hingga 7:00 petang.</p>
+                <input type="date" id="tarikh" class="w-full px-3 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent text-sm bg-white">
+            </section>
+
+            <!-- Langkah 2: slot -->
+            <section id="seksyenSlot" class="hidden bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+                <div class="flex items-baseline justify-between gap-3">
+                    <h2 class="text-base font-bold text-slate-900">Pilih slot</h2>
+                    <span id="tarikhPaparan" class="text-xs text-slate-500 text-right"></span>
+                </div>
+                <p class="text-xs text-slate-500 mt-0.5 mb-3">Ketik satu slot atau lebih yang berturutan.</p>
+                <div id="gridSlot" class="grid grid-cols-2 gap-2"></div>
+                <div class="flex gap-4 mt-3 text-[11px] text-slate-500">
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-white border border-slate-300"></span>Kosong</span>
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-blue-600"></span>Dipilih</span>
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-slate-200"></span>Ditempah / berlalu</span>
+                </div>
+            </section>
+
+            <!-- Langkah 3: maklumat -->
+            <section id="seksyenBorang" class="hidden bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+                <div id="ringkasan" class="bg-blue-50 border border-blue-100 rounded-xl p-3 text-sm text-blue-800 mb-4"></div>
+                <form id="formTempah" class="space-y-3">
+                    <div>
+                        <label for="nama" class="block text-xs font-semibold text-slate-600 mb-1">Nama penuh</label>
+                        <input type="text" id="nama" autocomplete="name" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent text-sm bg-white" placeholder="Contoh: Mohd Ali" required>
+                    </div>
+                    <div>
+                        <label for="phone" class="block text-xs font-semibold text-slate-600 mb-1">Nombor telefon</label>
+                        <input type="tel" id="phone" autocomplete="tel" inputmode="tel" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent text-sm bg-white" placeholder="Contoh: 0123456789" required>
+                    </div>
+                    <div>
+                        <label for="tujuan" class="block text-xs font-semibold text-slate-600 mb-1">Tujuan (pilihan)</label>
+                        <input type="text" id="tujuan" maxlength="200" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent text-sm bg-white" placeholder="Contoh: Main bersama kawan-kawan">
+                    </div>
+                    <button type="submit" id="btnHantar" class="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-semibold py-3 px-4 rounded-xl transition duration-200 text-sm shadow-md active:scale-[0.98]">
+                        Hantar tempahan
+                    </button>
+                    <p class="text-[11px] text-slate-400 text-center leading-relaxed">Slot dikunci untuk anda sebaik tempahan dihantar. Tempahan disahkan selepas Admin menerima bukti bayaran.</p>
+                </form>
+            </section>
+        </div>
+    </div>
+
+    <div id="toastContainer" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 w-full max-w-xs px-4"></div>
+
+    <script>
+    // GANTI dengan URL deployment "KBTTC Tempahan Backend" (/exec)
+    const API_URL = "https://script.google.com/macros/s/AKfycbyfP5VbZqjpijdC8FTgmmE6GFqNo-nwSlxgRBNVEA0p09CXpQdGck1CIiHTcJqSo3gIxA/exec";
+
+    const ADMIN_WA_NUMBER = "60199812960";
+    const BANK_INFO = { bank: "Maybank", noAkaun: "563019363721", namaAkaun: "TEGUH RESOURCES & SERVICES" };
+
+    let cfg = { harga: 10, jamMula: 8, jamTamat: 19 };
+    let jamPenuh = new Set();     // jam yang sudah ditempah pada tarikh dipilih
+    let pilih = null;             // { mula, tamat }  (tamat = jam akhir, eksklusif)
+    let tarikhSemasa = "";
+
+    const HARI = ["Ahad", "Isnin", "Selasa", "Rabu", "Khamis", "Jumaat", "Sabtu"];
+    const BULAN = ["Jan", "Feb", "Mac", "Apr", "Mei", "Jun", "Jul", "Ogos", "Sep", "Okt", "Nov", "Dis"];
+
+    function pad(n) { return (n < 10 ? "0" : "") + n; }
+    function jam(h) { return pad(h) + ":00"; }
+    function escHtml(s) { return String(s || "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;"); }
+
+    function isoLokal(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+    function tarikhMs(iso) {
+        const p = iso.split("-");
+        const d = new Date(+p[0], +p[1] - 1, +p[2]);
+        return HARI[d.getDay()] + ", " + d.getDate() + " " + BULAN[d.getMonth()] + " " + d.getFullYear();
+    }
+
+    function tunjukMesej(mesej, status = "info") {
+        const container = document.getElementById("toastContainer");
+        const toast = document.createElement("div");
+        let bgClass = "bg-slate-900 text-white";
+        if (status === "success") bgClass = "bg-blue-600 text-white";
+        if (status === "error") bgClass = "bg-rose-600 text-white";
+        toast.className = `${bgClass} px-4 py-3 rounded-xl shadow-lg text-sm font-medium transition-all duration-300 opacity-0 translate-y-2 flex items-center justify-between gap-3`;
+        toast.innerHTML = `<span>${escHtml(mesej)}</span><button class="text-white/60 hover:text-white" onclick="this.parentElement.remove()" aria-label="Tutup">✕</button>`;
+        container.appendChild(toast);
+        setTimeout(() => toast.classList.remove("opacity-0", "translate-y-2"), 10);
+        setTimeout(() => { toast.classList.add("opacity-0", "translate-y-2"); setTimeout(() => toast.remove(), 300); }, 5000);
+    }
+
+    // ---------- Slot ----------
+    async function muatSlot(tarikh) {
+        tarikhSemasa = tarikh;
+        pilih = null;
+        document.getElementById("seksyenSlot").classList.remove("hidden");
+        document.getElementById("tarikhPaparan").textContent = tarikhMs(tarikh);
+        document.getElementById("gridSlot").innerHTML = '<div class="col-span-2 py-6 text-center text-xs text-slate-400">Memuatkan slot...</div>';
+        kemaskiniBorang();
+
+        try {
+            const res = await fetch(`${API_URL}?action=getJadual&dari=${tarikh}&hingga=${tarikh}&_t=${Date.now()}`, { cache: "no-store" });
+            const data = await res.json();
+            if (data.status !== "success") throw new Error(data.message || "Gagal");
+            cfg = { harga: data.data.harga, jamMula: data.data.jamMula, jamTamat: data.data.jamTamat };
+            jamPenuh = new Set();
+            data.data.slot.forEach(s => {
+                for (let h = s.jamMula; h < s.jamMula + s.bilSlot; h++) jamPenuh.add(h);
+            });
+            document.getElementById("infoHarga").textContent =
+                `RM${cfg.harga} sejam. Waktu ${cfg.jamMula}:00 pagi hingga ${cfg.jamTamat - 12}:00 petang.`;
+            lukisSlot();
+        } catch (e) {
+            document.getElementById("gridSlot").innerHTML = '<div class="col-span-2 py-6 text-center text-xs text-rose-600">Gagal memuatkan slot. Semak internet, kemudian pilih tarikh semula.</div>';
+        }
+    }
+
+    function jamBerlalu(h) {
+        if (tarikhSemasa !== isoLokal(new Date())) return false;
+        return h <= new Date().getHours();
+    }
+
+    function lukisSlot() {
+        const grid = document.getElementById("gridSlot");
+        grid.innerHTML = "";
+        for (let h = cfg.jamMula; h < cfg.jamTamat; h++) {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            const label = `${jam(h)} – ${jam(h + 1)}`;
+            const penuh = jamPenuh.has(h);
+            const berlalu = jamBerlalu(h);
+            const dipilih = pilih && h >= pilih.mula && h < pilih.tamat;
+            let cls = "py-3 rounded-xl border text-sm font-semibold transition duration-150 ";
+            if (penuh || berlalu) {
+                cls += "bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed";
+                btn.disabled = true;
+                btn.innerHTML = `${label}<span class="block text-[10px] font-medium">${penuh ? "Ditempah" : "Berlalu"}</span>`;
+            } else if (dipilih) {
+                cls += "bg-blue-600 border-blue-600 text-white";
+                btn.innerHTML = label;
+                btn.setAttribute("aria-pressed", "true");
+            } else {
+                cls += "bg-white border-slate-200 text-slate-700 hover:border-blue-400 active:scale-[0.98]";
+                btn.innerHTML = label;
+            }
+            btn.className = cls;
+            if (!penuh && !berlalu) btn.onclick = () => ketikSlot(h);
+            grid.appendChild(btn);
+        }
+    }
+
+    // Pilihan sentiasa berturutan: ketik bersebelahan untuk panjangkan,
+    // ketik di hujung untuk kecilkan, selain itu mulakan pilihan baru.
+    function ketikSlot(h) {
+        if (!pilih) pilih = { mula: h, tamat: h + 1 };
+        else if (h === pilih.tamat) pilih.tamat = h + 1;
+        else if (h === pilih.mula - 1) pilih.mula = h;
+        else if (h >= pilih.mula && h < pilih.tamat) {
+            if (pilih.tamat - pilih.mula === 1) pilih = null;
+            else if (h === pilih.tamat - 1) pilih.tamat = h;
+            else if (h === pilih.mula) pilih.mula = h + 1;
+            else pilih = { mula: h, tamat: h + 1 };
+        } else pilih = { mula: h, tamat: h + 1 };
+        lukisSlot();
+        kemaskiniBorang();
+    }
+
+    function kemaskiniBorang() {
+        const seksyen = document.getElementById("seksyenBorang");
+        if (!pilih) { seksyen.classList.add("hidden"); return; }
+        const bil = pilih.tamat - pilih.mula;
+        document.getElementById("ringkasan").innerHTML =
+            `<div class="font-semibold">${tarikhMs(tarikhSemasa)}</div>
+             <div>${jam(pilih.mula)} – ${jam(pilih.tamat)} &middot; ${bil} jam &middot; <strong>RM${bil * cfg.harga}</strong></div>`;
+        seksyen.classList.remove("hidden");
+    }
+
+    // ---------- Hantar ----------
+    document.getElementById("formTempah").onsubmit = async function (e) {
+        e.preventDefault();
+        if (!pilih) { tunjukMesej("Sila pilih slot dahulu.", "error"); return; }
+        const nama = document.getElementById("nama").value.trim();
+        const phone = document.getElementById("phone").value.trim();
+        const btn = document.getElementById("btnHantar");
+        btn.disabled = true;
+        btn.textContent = "Menghantar...";
+
+        const payload = {
+            action: "buatTempahan",
+            nama: nama,
+            phone: phone,
+            tarikh: tarikhSemasa,
+            jamMula: pilih.mula,
+            bilSlot: pilih.tamat - pilih.mula,
+            tujuan: document.getElementById("tujuan").value.trim()
+        };
+
+        try {
+            const res = await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
+            const data = await res.json();
+            if (data.status === "success") {
+                paparkanBayaran(nama, data.data);
+            } else {
+                tunjukMesej(data.message || "Gagal menghantar tempahan.", "error");
+                btn.disabled = false;
+                btn.textContent = "Hantar tempahan";
+                muatSlot(tarikhSemasa);   // segarkan slot (mungkin baru ditempah orang lain)
+            }
+        } catch (err) {
+            tunjukMesej("Ralat sambungan. Tempahan belum dihantar, sila cuba semula.", "error");
+            btn.disabled = false;
+            btn.textContent = "Hantar tempahan";
+        }
+    };
+
+    function paparkanBayaran(nama, t) {
+        const masa = `${jam(t.jamMula)} – ${jam(t.jamMula + t.bilSlot)}`;
+        const mesej = `Salam, saya ${nama} telah menempah dewan KBTTC.\n\nID: ${t.id}\nTarikh: ${tarikhMs(t.tarikh)}\nMasa: ${masa}\nJumlah: RM${t.jumlah}\n\nSila SAHkan Tempahan saya.`;
+        const waUrl = `https://wa.me/${ADMIN_WA_NUMBER}?text=${encodeURIComponent(mesej)}`;
+
+        document.getElementById("kandungan").innerHTML = `
+            <section class="bg-emerald-50 border border-emerald-200 rounded-2xl p-5 text-center space-y-1.5">
+                <h2 class="text-base font-bold text-emerald-900">Tempahan diterima</h2>
+                <p class="text-xs text-emerald-700 leading-relaxed">Slot anda dikunci. Siapkan bayaran dan hantar bukti untuk pengesahan.</p>
+            </section>
+            <section class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 space-y-2 text-sm">
+                <div class="flex justify-between"><span class="text-slate-500">ID tempahan</span><span class="font-semibold font-mono">${escHtml(t.id)}</span></div>
+                <div class="flex justify-between gap-3"><span class="text-slate-500 shrink-0">Tarikh</span><span class="font-semibold text-right">${tarikhMs(t.tarikh)}</span></div>
+                <div class="flex justify-between"><span class="text-slate-500">Masa</span><span class="font-semibold">${masa}</span></div>
+                <div class="flex justify-between border-t border-slate-100 pt-2"><span class="text-slate-500">Jumlah</span><span class="font-bold text-slate-900">RM${t.jumlah}</span></div>
+            </section>
+            <section class="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-2">
+                <h3 class="text-sm font-bold text-slate-800">Langkah 1: Buat pembayaran RM${t.jumlah}</h3>
+                <div class="text-sm text-slate-800 space-y-1.5">
+                    <div class="flex justify-between"><span class="text-slate-500">Bank</span><span class="font-semibold">${BANK_INFO.bank}</span></div>
+                    <div class="flex justify-between"><span class="text-slate-500">No. akaun</span><span class="font-semibold font-mono">${BANK_INFO.noAkaun}</span></div>
+                    <div class="flex justify-between gap-3"><span class="text-slate-500 shrink-0">Nama akaun</span><span class="font-semibold text-right">${BANK_INFO.namaAkaun}</span></div>
+                </div>
+            </section>
+            <section class="bg-blue-50 border border-blue-100 rounded-2xl p-5 space-y-3">
+                <h3 class="text-sm font-bold text-blue-800">Langkah 2: Hantar bukti bayaran</h3>
+                <p class="text-xs text-blue-700 leading-relaxed">Ketik butang di bawah, lampirkan gambar resit dalam WhatsApp dan hantar kepada Admin.</p>
+                <a href="${waUrl}" target="_blank" rel="noopener" class="w-full flex items-center justify-center bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-4 rounded-xl transition duration-200 text-sm shadow-md active:scale-[0.98]">
+                    Hantar bukti bayaran ke WhatsApp
+                </a>
+            </section>
+            <p class="text-[11px] text-slate-400 text-center">Simpan ID tempahan anda. Tempahan disahkan selepas Admin menerima bukti bayaran.</p>
+        `;
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    // ---------- Init ----------
+    (function init() {
+        const inp = document.getElementById("tarikh");
+        const hariIni = new Date();
+        inp.min = isoLokal(hariIni);
+        inp.onchange = function () {
+            if (!this.value) return;
+            if (this.value < this.min) { tunjukMesej("Tarikh tersebut telah berlalu.", "error"); this.value = ""; return; }
+            muatSlot(this.value);
+        };
+    })();
+    </script>
+</body>
+</html>

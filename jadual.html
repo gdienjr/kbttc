@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KBTTC - Jadual Tempahan</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } } }
+    </script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased">
+
+    <div class="max-w-md w-full mx-auto px-4 py-6 flex-grow flex flex-col gap-4">
+        <header class="text-center py-2 flex flex-col items-center">
+            <img src="icon-192.png" alt="KBTTC Logo" class="h-24 object-contain mb-2 drop-shadow-lg" onerror="this.onerror=null; this.src='https://placehold.co/192x192/000000/ffffff?text=KBTTC'">
+            <h1 class="text-2xl font-bold text-slate-900">Jadual Tempahan Dewan</h1>
+            <p class="text-sm text-slate-500 mt-1">14 hari akan datang</p>
+        </header>
+
+        <div class="bg-blue-50 border border-blue-100 rounded-xl p-3 text-xs text-blue-700 leading-relaxed">
+            Paparan sahaja untuk ahli VIP. Slot yang ditempah oleh penyewa luar diberi keutamaan.
+        </div>
+
+        <div class="flex items-center justify-between text-xs text-slate-500">
+            <div class="flex gap-4">
+                <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-emerald-100 border border-emerald-200"></span>Kosong</span>
+                <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-rose-500"></span>Ditempah</span>
+            </div>
+            <button id="btnMuat" class="font-semibold text-blue-600">Muat semula</button>
+        </div>
+
+        <div id="senarai" class="space-y-3">
+            <div class="py-10 text-center text-xs text-slate-400">Memuatkan jadual...</div>
+        </div>
+    </div>
+
+    <script>
+    // GANTI dengan URL deployment "KBTTC Tempahan Backend" (/exec)
+    const API_URL = "https://script.google.com/macros/s/AKfycbyfP5VbZqjpijdC8FTgmmE6GFqNo-nwSlxgRBNVEA0p09CXpQdGck1CIiHTcJqSo3gIxA/exec";
+    const BIL_HARI = 14;
+
+    const HARI = ["Ahad", "Isnin", "Selasa", "Rabu", "Khamis", "Jumaat", "Sabtu"];
+    const BULAN = ["Jan", "Feb", "Mac", "Apr", "Mei", "Jun", "Jul", "Ogos", "Sep", "Okt", "Nov", "Dis"];
+
+    function pad(n) { return (n < 10 ? "0" : "") + n; }
+    function jam(h) { return pad(h) + ":00"; }
+    function isoLokal(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+
+    // Gabungkan jam berturutan jadi julat: [8,9,10,14] -> [[8,11],[14,15]]
+    function julat(jamList) {
+        const s = Array.from(new Set(jamList)).sort((a, b) => a - b);
+        const out = [];
+        s.forEach(h => {
+            const akhir = out[out.length - 1];
+            if (akhir && akhir[1] === h) akhir[1] = h + 1;
+            else out.push([h, h + 1]);
+        });
+        return out;
+    }
+
+    async function muat() {
+        const box = document.getElementById("senarai");
+        box.innerHTML = '<div class="py-10 text-center text-xs text-slate-400">Memuatkan jadual...</div>';
+
+        const mula = new Date();
+        const tamat = new Date();
+        tamat.setDate(tamat.getDate() + BIL_HARI - 1);
+
+        try {
+            const res = await fetch(`${API_URL}?action=getJadual&dari=${isoLokal(mula)}&hingga=${isoLokal(tamat)}&_t=${Date.now()}`, { cache: "no-store" });
+            const data = await res.json();
+            if (data.status !== "success") throw new Error(data.message || "Gagal");
+            lukis(data.data, mula);
+        } catch (e) {
+            box.innerHTML = '<div class="py-10 text-center text-xs text-rose-600">Gagal memuatkan jadual. Semak internet, kemudian tekan Muat semula.</div>';
+        }
+    }
+
+    function lukis(d, mula) {
+        const jamMula = d.jamMula, jamTamat = d.jamTamat;
+        const bilJam = jamTamat - jamMula;
+
+        // Kumpul jam ditempah ikut tarikh
+        const ikutTarikh = {};
+        d.slot.forEach(s => {
+            const arr = ikutTarikh[s.tarikh] = ikutTarikh[s.tarikh] || [];
+            for (let h = s.jamMula; h < s.jamMula + s.bilSlot; h++) arr.push(h);
+        });
+
+        let html = "";
+        for (let i = 0; i < BIL_HARI; i++) {
+            const dt = new Date(mula.getFullYear(), mula.getMonth(), mula.getDate() + i);
+            const iso = isoLokal(dt);
+            const penuh = ikutTarikh[iso] || [];
+            const setPenuh = new Set(penuh);
+            const tajuk = (i === 0 ? "Hari ini" : i === 1 ? "Esok" : HARI[dt.getDay()]) + `, ${dt.getDate()} ${BULAN[dt.getMonth()]}`;
+            const ranges = julat(penuh);
+            const teks = ranges.length
+                ? "Ditempah: " + ranges.map(r => `${jam(r[0])}–${jam(r[1])}`).join(", ")
+                : "Semua slot kosong";
+
+            let bar = "";
+            let label = "";
+            for (let h = jamMula; h < jamTamat; h++) {
+                const t = setPenuh.has(h);
+                bar += `<div class="h-7 ${t ? "bg-rose-500" : "bg-emerald-100"} ${h > jamMula ? "border-l border-white" : ""}"></div>`;
+                label += `<div class="text-[9px] text-slate-400 text-left">${h}</div>`;
+            }
+
+            html += `
+                <section class="bg-white rounded-2xl p-4 shadow-sm border ${i === 0 ? "border-blue-200" : "border-slate-100"}">
+                    <div class="flex items-baseline justify-between gap-3 mb-2">
+                        <h2 class="text-sm font-bold text-slate-900">${tajuk}</h2>
+                        <span class="text-[11px] ${ranges.length ? "text-rose-600 font-semibold" : "text-slate-400"}">${ranges.length ? penuh.length + " jam ditempah" : "Kosong"}</span>
+                    </div>
+                    <div class="rounded-md overflow-hidden grid" style="grid-template-columns: repeat(${bilJam}, minmax(0, 1fr));" role="img" aria-label="${teks}">${bar}</div>
+                    <div class="grid mt-1" style="grid-template-columns: repeat(${bilJam}, minmax(0, 1fr));" aria-hidden="true">${label}</div>
+                    <p class="text-xs text-slate-500 mt-2">${teks}</p>
+                </section>`;
+        }
+        document.getElementById("senarai").innerHTML = html;
+    }
+
+    document.getElementById("btnMuat").onclick = muat;
+    muat();
+    </script>
+</body>
+</html>

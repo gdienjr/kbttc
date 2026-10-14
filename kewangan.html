@@ -548,6 +548,8 @@ function renderList(type, arr) {
     // "Baki dari bulan lepas" ialah item auto-isi dari bulan sebelumnya -
     // ia TAK PATUT ada butang ⊕/+ langsung, kekal plain sentiasa.
     const isBakiCarryForward = type === 'masuk' && /baki.*bulan.*lepas/i.test(item.label || '');
+    // "Sewa dewan" dikira automatik dari sheet Tempahan (butang ⟳), ditentukan ikut LABEL.
+    const isSewaLink = type === 'masuk' && /sewa\s*dewan/i.test(item.label || '');
     if (isBakiCarryForward) {
       row.innerHTML = `
         <span class="item-num">${i + 1}</span>
@@ -567,6 +569,19 @@ function renderList(type, arr) {
             oninput="updateAmt('${type}',${i},this.value)" style="width:82px;">
           <button onclick="fetchYuran(${i})" title="Ambil dari kbttc-yuran"
             style="width:30px;height:36px;border-radius:6px;border:1px solid var(--border);background:var(--green-light);color:var(--green);font-size:14px;cursor:pointer;flex-shrink:0;" id="yuran-fetch-btn">⟳</button>
+        </div>
+        <button class="del-btn" onclick="removeItem('${type}',${i})" aria-label="Padam">✕</button>
+      `;
+    } else if (isSewaLink) {
+      row.innerHTML = `
+        <span class="item-num">${i + 1}</span>
+        <input type="text" placeholder="Keterangan" value="${escHtml(item.label)}"
+          oninput="updateLabel('${type}',${i},this.value)">
+        <div style="display:flex;gap:4px;align-items:center;flex-shrink:0;">
+          <input type="number" placeholder="0.00" step="0.01" min="0" value="${item.amt}"
+            oninput="updateAmt('${type}',${i},this.value)" style="width:82px;">
+          <button onclick="fetchSewa(${i})" title="Ambil dari tempahan (tarikh sudah lepas)"
+            style="width:30px;height:36px;border-radius:6px;border:1px solid var(--border);background:var(--green-light);color:var(--green);font-size:14px;cursor:pointer;flex-shrink:0;" id="sewa-fetch-btn">⟳</button>
         </div>
         <button class="del-btn" onclick="removeItem('${type}',${i})" aria-label="Padam">✕</button>
       `;
@@ -974,6 +989,34 @@ async function fetchYuran(idx) {
       renderList('masuk', masuk);
       updateTotals();
       showToast('✓ Kutipan yuran ' + bulan + ' ' + tahun + ': RM ' + data.yuran.toFixed(2));
+    } else {
+      showToast('Ralat: ' + (data.error || 'Cuba semula'));
+      if (btn) { btn.textContent = '⟳'; btn.disabled = false; }
+    }
+  } catch(e) {
+    showToast('Gagal sambung. Semak URL & internet.');
+    if (btn) { btn.textContent = '⟳'; btn.disabled = false; }
+  }
+}
+
+// Fetch Sewa dewan dari sheet Tempahan.
+// Hanya tempahan "Sah" yang tarikh gunanya SUDAH LEPAS dalam bulan+tahun
+// dipilih dikira. Butang ini MENETAPKAN nilai (bukan menambah).
+async function fetchSewa(idx) {
+  const url = getUrl();
+  if (!url) { showToast('Sila masukkan URL Apps Script dahulu'); return; }
+  const bulan = document.getElementById('bulan').value;
+  const tahun = document.getElementById('tahun').value;
+  const btn = document.getElementById('sewa-fetch-btn');
+  if (btn) { btn.textContent = '…'; btn.disabled = true; }
+  try {
+    const res = await fetchNoCache(url + '?action=getKutipanSewa&bulan=' + bulan + '&tahun=' + tahun);
+    const data = await res.json();
+    if (data.success) {
+      masuk[idx].amt = data.sewa.toFixed(2);
+      renderList('masuk', masuk);
+      updateTotals();
+      showToast('✓ Sewa dewan ' + bulan + ' ' + tahun + ': ' + data.bilSlot + ' slot = RM ' + data.sewa.toFixed(2));
     } else {
       showToast('Ralat: ' + (data.error || 'Cuba semula'));
       if (btn) { btn.textContent = '⟳'; btn.disabled = false; }
